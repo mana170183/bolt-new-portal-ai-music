@@ -36,30 +36,52 @@ const MusicGenerator = () => {
   const initializeComponent = async () => {
     try {
       // Check authentication
-      if (!authAPI.isAuthenticated()) {
-        await authAPI.generateToken('demo_user', 'free')
+      try {
+        if (!authAPI.isAuthenticated()) {
+          await authAPI.generateToken('demo_user', 'free')
+        }
+        setIsAuthenticated(true)
+      } catch (authError) {
+        console.error('Authentication failed:', authError)
+        setError('Backend server is not available. Please ensure the Flask server is running on port 5000.')
+        return
       }
-      setIsAuthenticated(true)
 
       // Load metadata
-      const [genresData, moodsData, quotaData] = await Promise.all([
-        metadataAPI.getGenres(),
-        metadataAPI.getMoods(),
-        musicAPI.getUserQuota()
-      ])
+      try {
+        const [genresData, moodsData, quotaData] = await Promise.all([
+          metadataAPI.getGenres(),
+          metadataAPI.getMoods(),
+          musicAPI.getUserQuota()
+        ])
 
-      if (genresData.status === 'success') {
-        setGenres(genresData.genres)
-      }
-      if (moodsData.status === 'success') {
-        setMoods(moodsData.moods)
-      }
-      if (quotaData.status === 'success') {
-        setUserQuota(quotaData.quota)
+        if (genresData.status === 'success') {
+          setGenres(genresData.genres)
+        }
+        if (moodsData.status === 'success') {
+          setMoods(moodsData.moods)
+        }
+        if (quotaData.status === 'success') {
+          setUserQuota(quotaData.quota)
+        }
+      } catch (metadataError) {
+        console.error('Failed to load metadata:', metadataError)
+        // Set default values if API fails
+        setGenres([
+          {id: 'pop', name: 'Pop', description: 'Catchy, mainstream melodies'},
+          {id: 'rock', name: 'Rock', description: 'Guitar-driven, energetic'},
+          {id: 'electronic', name: 'Electronic', description: 'Synthesized, digital sounds'}
+        ])
+        setMoods([
+          {id: 'upbeat', name: 'Upbeat', description: 'Happy, energetic feeling'},
+          {id: 'calm', name: 'Calm', description: 'Peaceful, relaxing'},
+          {id: 'energetic', name: 'Energetic', description: 'High-energy, motivating'}
+        ])
+        setError('Some features may be limited. Backend connection issues detected.')
       }
     } catch (error) {
       console.error('Initialization error:', error)
-      setError('Failed to initialize. Please refresh the page.')
+      setError('Failed to initialize. Please ensure the backend server is running and refresh the page.')
     }
   }
 
