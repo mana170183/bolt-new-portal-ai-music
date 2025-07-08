@@ -51,7 +51,7 @@ export const authAPI = {
         plan: plan
       });
       
-      if (response.data.status === 'success') {
+      if (response.data.success === true) {
         authToken = response.data.token;
         localStorage.setItem('auth_token', authToken);
         return response.data;
