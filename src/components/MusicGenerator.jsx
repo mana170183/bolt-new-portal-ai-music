@@ -35,6 +35,20 @@ const MusicGenerator = () => {
 
   const initializeComponent = async () => {
     try {
+      // First check if backend is available
+      try {
+        const healthResponse = await fetch('/health')
+        if (!healthResponse.ok) {
+          throw new Error(`Health check failed: ${healthResponse.status}`)
+        }
+        const healthData = await healthResponse.json()
+        console.log('Backend health check passed:', healthData)
+      } catch (healthError) {
+        console.error('Backend health check failed:', healthError)
+        setError('Backend server is not available. Please ensure the Flask server is running on port 5000.')
+        return
+      }
+
       // Check authentication
       try {
         if (!authAPI.isAuthenticated()) {
@@ -43,7 +57,7 @@ const MusicGenerator = () => {
         setIsAuthenticated(true)
       } catch (authError) {
         console.error('Authentication failed:', authError)
-        setError('Backend server is not available. Please ensure the Flask server is running on port 5000.')
+        setError(`Authentication failed: ${authError.message || 'Unknown error'}. Please check the backend server logs.`)
         return
       }
 
@@ -77,11 +91,12 @@ const MusicGenerator = () => {
           {id: 'calm', name: 'Calm', description: 'Peaceful, relaxing'},
           {id: 'energetic', name: 'Energetic', description: 'High-energy, motivating'}
         ])
-        setError('Some features may be limited. Backend connection issues detected.')
+        // Don't show error for metadata loading failure if auth worked
+        console.warn('Using default metadata due to API error')
       }
     } catch (error) {
       console.error('Initialization error:', error)
-      setError('Failed to initialize. Please ensure the backend server is running and refresh the page.')
+      setError(`Failed to initialize: ${error.message || 'Unknown error'}. Please ensure the backend server is running and refresh the page.`)
     }
   }
 
