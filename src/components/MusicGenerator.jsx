@@ -37,7 +37,14 @@ const MusicGenerator = () => {
     try {
       // First check if backend is available
       try {
-        const healthResponse = await fetch('/health')
+        const healthResponse = await fetch('/health', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Add timeout to prevent hanging
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        })
         if (!healthResponse.ok) {
           throw new Error(`Health check failed: ${healthResponse.status}`)
         }
@@ -45,7 +52,13 @@ const MusicGenerator = () => {
         console.log('Backend health check passed:', healthData)
       } catch (healthError) {
         console.error('Backend health check failed:', healthError)
-        setError('Backend server is not available. Please ensure the Flask server is running on port 5000.')
+        if (healthError.name === 'TimeoutError') {
+          setError('Backend server is taking too long to respond. Please check if the Flask server is running on port 5000.')
+        } else if (healthError.message.includes('Failed to fetch') || healthError.message.includes('ECONNREFUSED')) {
+          setError('Cannot connect to backend server. Please start the Flask server by running the backend startup script in a separate terminal.')
+        } else {
+          setError(`Backend server error: ${healthError.message}. Please ensure the Flask server is running on port 5000.`)
+        }
         return
       }
 
