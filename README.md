@@ -40,6 +40,9 @@ A modern AI-powered music generation platform that creates royalty-free music fr
    
    **Option A: Using the startup script (Recommended)**
    ```bash
+   # Make sure you're in the project root directory first
+   # (the directory containing backend/, src/, README.md, etc.)
+   
    # On Linux/Mac
    chmod +x start-backend.sh
    ./start-backend.sh
@@ -70,11 +73,14 @@ A modern AI-powered music generation platform that creates royalty-free music fr
 - Check that no other service is using port 5000
 - Verify the backend server starts without errors
 - Test the health endpoint: `curl http://localhost:5000/health`
+- Make sure you're running the startup script from the project root directory
 
 **Common Errors:**
 - `ECONNREFUSED 127.0.0.1:5000`: Backend server is not running
 - `500 Internal Server Error`: Check backend terminal for error messages
 - `Authentication failed`: Backend server may have crashed or restarted
+- `cd: no such file or directory: backend`: Run the script from the project root directory
+- `ModuleNotFoundError: No module named '_signal'`: Corrupted Python environment - delete the `backend/venv` folder and run the startup script again
 
 ## 🏗️ Architecture
 
