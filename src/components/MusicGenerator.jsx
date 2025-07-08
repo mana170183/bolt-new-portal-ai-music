@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Play, 
   Pause, 
@@ -29,10 +29,58 @@ const MusicGenerator = () => {
   const [moods, setMoods] = useState([])
   const [userQuota, setUserQuota] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [audioVolume, setAudioVolume] = useState(0.7)
+  
+  // Audio reference
+  const audioRef = useRef(null)
 
   useEffect(() => {
     initializeComponent()
   }, [])
+
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime)
+    }
+
+    const handleEnded = () => {
+      setIsPlaying(false)
+      setCurrentTime(0)
+    }
+
+    const handlePlay = () => {
+      setIsPlaying(true)
+    }
+
+    const handlePause = () => {
+      setIsPlaying(false)
+    }
+
+    const handleError = (e) => {
+      console.error('Audio playback error:', e)
+      setError('Audio playback failed. Please try generating the music again.')
+      setIsPlaying(false)
+    }
+
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+    audio.addEventListener('error', handleError)
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+      audio.removeEventListener('error', handleError)
+    }
+  }, [generatedTrack])
 
   const initializeComponent = async () => {
     try {
@@ -154,7 +202,48 @@ const MusicGenerator = () => {
   }
 
   const togglePlayback = () => {
-    setIsPlaying(!isPlaying)
+    const audio = audioRef.current
+    if (!audio || !generatedTrack) return
+
+    try {
+      if (isPlaying) {
+        audio.pause()
+      } else {
+        // Set volume before playing
+        audio.volume = audioVolume
+        audio.play().catch(e => {
+          console.error('Play failed:', e)
+          setError('Failed to play audio. Please try again.')
+        })
+      }
+    } catch (e) {
+      console.error('Audio control error:', e)
+      setError('Audio control failed. Please try again.')
+    }
+  }
+
+  const handleVolumeChange = (e) => {
+    const newVolume = parseFloat(e.target.value)
+    setAudioVolume(newVolume)
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume
+    }
+  }
+
+  const handleSeek = (e) => {
+    const audio = audioRef.current
+    if (!audio || !generatedTrack) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const percent = (e.clientX - rect.left) / rect.width
+    const newTime = percent * audio.duration
+    audio.currentTime = newTime
+  }
+
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60)
+    const seconds = Math.floor(time % 60)
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
   const handleDownload = () => {
@@ -326,6 +415,14 @@ const MusicGenerator = () => {
             {/* Generated Track */}
             {generatedTrack && (
               <div className="bg-gradient-to-r from-primary-50 to-accent-50 rounded-xl p-6 animate-fade-in">
+                {/* Hidden Audio Element */}
+                <audio 
+                  ref={audioRef}
+                  src={generatedTrack.url}
+                  preload="auto"
+                  crossOrigin="anonymous"
+                />
+                
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-1">
@@ -349,9 +446,18 @@ const MusicGenerator = () => {
                         <Play className="h-6 w-6 text-primary-600" />
                       )}
                     </button>
-                    <button className="bg-white hover:bg-gray-50 p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105">
-                      <Volume2 className="h-6 w-6 text-gray-600" />
-                    </button>
+                    <div className="flex items-center space-x-2 bg-white rounded-full px-3 py-2 shadow-lg">
+                      <Volume2 className="h-4 w-4 text-gray-600" />
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={audioVolume}
+                        onChange={handleVolumeChange}
+                        className="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
                     <button 
                       onClick={handleDownload}
                       className="btn-primary flex items-center space-x-2"
@@ -362,19 +468,39 @@ const MusicGenerator = () => {
                   </div>
                 </div>
 
-                {/* Audio Waveform Placeholder */}
+                {/* Audio Progress Bar */}
                 <div className="bg-white rounded-lg p-4 mb-4">
-                  <div className="flex items-center justify-center h-16 bg-gradient-to-r from-primary-100 to-accent-100 rounded">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-500">{formatTime(currentTime)}</span>
+                    <span className="text-sm text-gray-500">{formatTime(generatedTrack.duration)}</span>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div 
+                    className="w-full bg-gray-200 rounded-full h-2 cursor-pointer"
+                    onClick={handleSeek}
+                  >
+                    <div 
+                      className="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full transition-all duration-200"
+                      style={{ 
+                        width: `${generatedTrack.duration > 0 ? (currentTime / generatedTrack.duration) * 100 : 0}%` 
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Visual Waveform */}
+                  <div className="flex items-center justify-center h-16 bg-gradient-to-r from-primary-100 to-accent-100 rounded mt-4">
                     <div className="flex items-end space-x-1">
-                      {[...Array(20)].map((_, i) => (
+                      {[...Array(40)].map((_, i) => (
                         <div
                           key={i}
                           className={`bg-gradient-to-t from-primary-500 to-accent-500 rounded-sm transition-all duration-300 ${
                             isPlaying ? 'animate-pulse' : ''
                           }`}
                           style={{
-                            width: '4px',
-                            height: `${Math.random() * 40 + 10}px`
+                            width: '3px',
+                            height: `${Math.sin(i * 0.3) * 20 + 25}px`,
+                            opacity: currentTime > 0 && i < (currentTime / generatedTrack.duration) * 40 ? 1 : 0.3
                           }}
                         />
                       ))}
