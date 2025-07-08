@@ -13,6 +13,7 @@ import {
   Zap
 } from 'lucide-react'
 import { musicAPI, metadataAPI, authAPI } from '../services/api'
+import { healthAPI } from '../services/api'
 
 const MusicGenerator = () => {
   const [prompt, setPrompt] = useState('')
@@ -37,18 +38,7 @@ const MusicGenerator = () => {
     try {
       // First check if backend is available
       try {
-        const healthResponse = await fetch('http://localhost:5000/health', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // Add timeout to prevent hanging
-          signal: AbortSignal.timeout(5000) // 5 second timeout
-        })
-        if (!healthResponse.ok) {
-          throw new Error(`Health check failed: ${healthResponse.status}`)
-        }
-        const healthData = await healthResponse.json()
+        const healthData = await healthAPI.checkHealth()
         console.log('Backend health check passed:', healthData)
         setSuccess('Connected to backend server successfully!')
       } catch (healthError) {
