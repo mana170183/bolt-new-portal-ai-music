@@ -36,20 +36,45 @@ A modern AI-powered music generation platform that creates royalty-free music fr
    npm install
    ```
 
-3. **Start the frontend**
+3. **Start the backend server** (in a new terminal)
+   
+   **Option A: Using the startup script (Recommended)**
    ```bash
-   npm run dev
+   # On Linux/Mac
+   chmod +x start-backend.sh
+   ./start-backend.sh
+   
+   # On Windows
+   start-backend.bat
    ```
-
-4. **Set up the backend** (in a new terminal)
+   
+   **Option B: Manual setup**
    ```bash
    cd backend
    pip install -r requirements.txt
    python app.py
    ```
 
+4. **Start the frontend** (in another terminal)
+   ```bash
+   npm run dev
+   ```
+
 5. **Open your browser**
    Navigate to `http://localhost:3000`
+
+### Troubleshooting
+
+**Backend Connection Issues:**
+- Ensure the Flask server is running on port 5000
+- Check that no other service is using port 5000
+- Verify the backend server starts without errors
+- Test the health endpoint: `curl http://localhost:5000/health`
+
+**Common Errors:**
+- `ECONNREFUSED 127.0.0.1:5000`: Backend server is not running
+- `500 Internal Server Error`: Check backend terminal for error messages
+- `Authentication failed`: Backend server may have crashed or restarted
 
 ## 🏗️ Architecture
 
