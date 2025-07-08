@@ -11,6 +11,7 @@ import time
 import threading
 import warnings
 import wave
+import random
 warnings.filterwarnings("ignore")
 
 # Advanced Music Generation imports
@@ -27,6 +28,15 @@ except ImportError as e:
     MUSICGEN_AVAILABLE = False
     print(f"⚠️  MusicGen not available: {e}", file=sys.stderr)
     print("🔄 Using advanced procedural music generation", file=sys.stderr)
+
+# Import advanced multi-instrumental generator
+try:
+    from advanced_music_generator import AdvancedMultiInstrumentalGenerator
+    ADVANCED_GENERATOR_AVAILABLE = True
+    print("🎼 Advanced Multi-Instrumental Generator loaded", file=sys.stderr)
+except ImportError as e:
+    ADVANCED_GENERATOR_AVAILABLE = False
+    print(f"⚠️  Advanced generator not available: {e}", file=sys.stderr)
 
 # Load environment variables
 load_dotenv()
@@ -560,15 +570,255 @@ def serve_audio(filename):
             "error": str(e)
         }), 500
 
-if __name__ == '__main__':
+@app.route('/api/generate-advanced-music', methods=['POST'])
+def generate_advanced_music():
+    """
+    Generate advanced multi-instrumental music composition
+    
+    Expected JSON payload:
+    {
+        "lyrics": "optional lyrics text",
+        "mood": "upbeat|sad|energetic|calm|etc",
+        "genre": "pop|rock|jazz|blues|folk|etc", 
+        "instruments": ["piano", "guitar", "bass", "drums", "strings"],
+        "tempo_bpm": 120,
+        "duration": 30,
+        "output_format": "wav|mp3|midi",
+        "export_stems": false
+    }
+    """
     try:
-        port = int(os.environ.get('PORT', 5001))
-        print(f"🚀 Starting Flask server on port {port}...", file=sys.stderr)
-        print(f"📍 Health check available at: http://localhost:{port}/health", file=sys.stderr)
-        print(f"📡 API endpoints available at: http://localhost:{port}/api/", file=sys.stderr)
-        print(f"🔧 CORS enabled for: http://localhost:3000, http://127.0.0.1:3000", file=sys.stderr)
-        app.run(host='0.0.0.0', port=port, debug=True)
+        print("Advanced music generation request received", file=sys.stderr)
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No data provided"
+            }), 400
+        
+        # Extract parameters with defaults
+        lyrics = data.get('lyrics', '')
+        mood = data.get('mood', 'upbeat')
+        genre = data.get('genre', 'pop')
+        instruments = data.get('instruments', ['piano', 'guitar', 'bass', 'drums'])
+        tempo_bpm = data.get('tempo_bpm', 120)
+        duration = data.get('duration', 30)
+        output_format = data.get('output_format', 'wav')
+        export_stems = data.get('export_stems', False)
+        
+        print(f"Advanced params: mood={mood}, genre={genre}, instruments={instruments}, tempo={tempo_bpm}", file=sys.stderr)
+        
+        # Generate track ID
+        track_id = f"advanced_{int(time.time())}_{random.randint(1000, 9999)}"
+        
+        # Check if advanced generator is available
+        if ADVANCED_GENERATOR_AVAILABLE:
+            try:
+                # Initialize generator
+                generator = AdvancedMultiInstrumentalGenerator()
+                
+                # Prepare generation parameters
+                params = {
+                    'lyrics': lyrics,
+                    'mood': mood,
+                    'genre': genre,
+                    'instruments': instruments,
+                    'tempo_bpm': tempo_bpm,
+                    'duration': duration
+                }
+                
+                # Generate composition
+                audio_data, metadata = generator.generate_composition(params)
+                
+                # Save main composition
+                filename = f"{track_id}.wav"
+                filepath = os.path.join('generated_audio', filename)
+                sf.write(filepath, audio_data, 44100)
+                
+                # Export stems if requested
+                stem_files = {}
+                if export_stems and hasattr(generator, 'export_stems'):
+                    # This would require modification to return individual tracks
+                    print("Stem export requested but not yet implemented", file=sys.stderr)
+                
+                # Create response
+                track_info = {
+                    "id": track_id,
+                    "title": f"{genre.title()} {mood.title()} Composition",
+                    "url": f"/api/audio/{filename}",
+                    "download_url": f"/api/audio/{filename}",
+                    "duration": duration,
+                    "genre": genre,
+                    "mood": mood,
+                    "instruments": instruments,
+                    "tempo_bpm": tempo_bpm,
+                    "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "metadata": metadata,
+                    "stems": stem_files if export_stems else {},
+                    "waveform_data": generate_waveform_data(audio_data)
+                }
+                
+                print(f"Advanced music generated successfully: {track_id}", file=sys.stderr)
+                return jsonify({
+                    "status": "success",
+                    "success": True,
+                    "track": track_info
+                })
+                
+            except Exception as e:
+                print(f"Advanced generation failed: {e}", file=sys.stderr)
+                traceback.print_exc()
+                # Fall back to regular generation
+                return generate_music()
+        
+        else:
+            # Fall back to regular generation if advanced not available
+            print("Advanced generator not available, falling back to regular generation", file=sys.stderr)
+            return generate_music()
+            
     except Exception as e:
-        print(f"❌ Failed to start server: {str(e)}", file=sys.stderr)
+        print(f"Advanced music generation error: {e}", file=sys.stderr)
         traceback.print_exc()
-        sys.exit(1)
+        return jsonify({
+            "success": False,
+            "error": f"Music generation failed: {str(e)}"
+        }), 500
+
+
+@app.route('/api/instruments', methods=['GET'])
+def get_available_instruments():
+    """Get list of available instruments for multi-instrumental generation"""
+    try:
+        instruments = [
+            {
+                "id": "piano",
+                "name": "Piano",
+                "category": "keyboard",
+                "description": "Acoustic piano with rich harmonics"
+            },
+            {
+                "id": "guitar", 
+                "name": "Guitar",
+                "category": "string",
+                "description": "Acoustic/electric guitar with strumming patterns"
+            },
+            {
+                "id": "bass",
+                "name": "Bass Guitar", 
+                "category": "string",
+                "description": "Electric bass guitar for rhythm section"
+            },
+            {
+                "id": "drums",
+                "name": "Drum Kit",
+                "category": "percussion", 
+                "description": "Complete drum kit (kick, snare, hi-hat)"
+            },
+            {
+                "id": "strings",
+                "name": "String Section",
+                "category": "orchestral",
+                "description": "Orchestral string ensemble with vibrato"
+            },
+            {
+                "id": "synthesizer",
+                "name": "Synthesizer",
+                "category": "electronic",
+                "description": "Electronic synthesizer with various waveforms"
+            }
+        ]
+        
+        return jsonify({
+            "success": True,
+            "instruments": instruments
+        })
+        
+    except Exception as e:
+        print(f"Error getting instruments: {e}", file=sys.stderr)
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route('/api/composition-templates', methods=['GET'])
+def get_composition_templates():
+    """Get pre-defined composition templates for different genres"""
+    try:
+        templates = {
+            "pop": {
+                "name": "Pop Song",
+                "instruments": ["piano", "guitar", "bass", "drums"],
+                "tempo_range": [120, 140],
+                "structure": "Verse-Chorus-Verse-Chorus-Bridge-Chorus",
+                "chord_progressions": ["vi-IV-I-V", "I-V-vi-IV"]
+            },
+            "rock": {
+                "name": "Rock Song", 
+                "instruments": ["guitar", "bass", "drums"],
+                "tempo_range": [140, 180],
+                "structure": "Intro-Verse-Chorus-Verse-Chorus-Solo-Chorus",
+                "chord_progressions": ["I-IV-V-I", "vi-IV-I-V"]
+            },
+            "jazz": {
+                "name": "Jazz Standard",
+                "instruments": ["piano", "bass", "drums"],
+                "tempo_range": [80, 120],
+                "structure": "Head-Solos-Head",
+                "chord_progressions": ["ii-V-I", "I-vi-ii-V"]
+            },
+            "orchestral": {
+                "name": "Orchestral Piece",
+                "instruments": ["strings", "piano"],
+                "tempo_range": [60, 100],
+                "structure": "Exposition-Development-Recapitulation",
+                "chord_progressions": ["I-V-vi-iii-IV-I-IV-V"]
+            },
+            "folk": {
+                "name": "Folk Song",
+                "instruments": ["guitar", "bass"],
+                "tempo_range": [80, 110], 
+                "structure": "Verse-Chorus-Verse-Chorus-Bridge-Chorus",
+                "chord_progressions": ["I-IV-V-I", "vi-IV-I-V"]
+            }
+        }
+        
+        return jsonify({
+            "success": True,
+            "templates": templates
+        })
+        
+    except Exception as e:
+        print(f"Error getting templates: {e}", file=sys.stderr)
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+def generate_waveform_data(audio_data, num_points=50):
+    """Generate waveform visualization data from audio"""
+    try:
+        # Downsample for visualization
+        step = len(audio_data) // num_points
+        if step < 1:
+            step = 1
+        
+        downsampled = audio_data[::step]
+        
+        # Convert to amplitude values (0-100)
+        normalized = np.abs(downsampled)
+        max_val = np.max(normalized) if np.max(normalized) > 0 else 1
+        waveform = (normalized / max_val * 100).astype(int).tolist()
+        
+        # Ensure we have exactly num_points
+        if len(waveform) > num_points:
+            waveform = waveform[:num_points]
+        elif len(waveform) < num_points:
+            waveform.extend([0] * (num_points - len(waveform)))
+            
+        return waveform
+        
+    except Exception as e:
+        print(f"Error generating waveform data: {e}", file=sys.stderr)
+        return [random.randint(10, 50) for _ in range(num_points)]
