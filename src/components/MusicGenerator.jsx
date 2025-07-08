@@ -37,27 +37,28 @@ const MusicGenerator = () => {
     try {
       // First check if backend is available
       try {
-        const healthResponse = await fetch('/health', {
+        const healthResponse = await fetch('http://localhost:5000/health', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
           // Add timeout to prevent hanging
-          signal: AbortSignal.timeout(10000) // 10 second timeout
+          signal: AbortSignal.timeout(5000) // 5 second timeout
         })
         if (!healthResponse.ok) {
           throw new Error(`Health check failed: ${healthResponse.status}`)
         }
         const healthData = await healthResponse.json()
         console.log('Backend health check passed:', healthData)
+        setSuccess('Connected to backend server successfully!')
       } catch (healthError) {
         console.error('Backend health check failed:', healthError)
         if (healthError.name === 'TimeoutError') {
-          setError('Backend server is taking too long to respond. Please check if the Flask server is running on port 5000.')
+          setError('Backend server timeout. Please ensure the Flask server is running on port 5000 and try refreshing the page.')
         } else if (healthError.message.includes('Failed to fetch') || healthError.message.includes('ECONNREFUSED')) {
-          setError('Cannot connect to backend server. Please start the Flask server by running the backend startup script in a separate terminal.')
+          setError('Cannot connect to backend server. Please start the Flask server by running "./start-backend.sh" (Linux/Mac) or "start-backend.bat" (Windows) in a separate terminal, then refresh this page.')
         } else {
-          setError(`Backend server error: ${healthError.message}. Please ensure the Flask server is running on port 5000.`)
+          setError(`Backend server error: ${healthError.message}. Please ensure the Flask server is running on port 5000 and try refreshing the page.`)
         }
         return
       }

@@ -4,19 +4,37 @@ import os
 import sys
 import traceback
 from dotenv import load_dotenv
+import logging
 
 # Load environment variables
 load_dotenv()
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('backend.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 
 # Configure CORS properly
-CORS(app, origins=['http://localhost:3000', 'http://127.0.0.1:3000', 'https://localhost:3000'])
+CORS(app, origins=[
+    'http://localhost:3000', 
+    'http://127.0.0.1:3000', 
+    'https://localhost:3000',
+    'http://localhost:5173',  # Vite dev server default
+    'http://127.0.0.1:5173'
+])
 
 # Add error handling for startup
 @app.errorhandler(500)
 def internal_error(error):
-    print(f"Internal server error: {str(error)}", file=sys.stderr)
+    logger.error(f"Internal server error: {str(error)}")
     traceback.print_exc()
     return jsonify({
         "success": False,
@@ -25,6 +43,7 @@ def internal_error(error):
 
 @app.errorhandler(404)
 def not_found(error):
+    logger.warning(f"404 error: {request.url}")
     return jsonify({
         "success": False,
         "error": "Endpoint not found"
@@ -32,27 +51,39 @@ def not_found(error):
 
 @app.before_request
 def log_request_info():
-    print(f"Request: {request.method} {request.url}", file=sys.stderr)
+    logger.info(f"Request: {request.method} {request.url}")
     if request.is_json:
-        print(f"Request data: {request.get_json()}", file=sys.stderr)
+        logger.info(f"Request data: {request.get_json()}")
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    print("Health check requested", file=sys.stderr)
-    return jsonify({
+    logger.info("Health check requested")
+    try:
+        response = {
         "status": "healthy", 
         "message": "Backend is running",
         "success": True,
-        "port": os.environ.get('PORT', 5000)
-    })
+            "port": int(os.environ.get('PORT', 5000)),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+        logger.info(f"Health check response: {response}")
+        return jsonify(response)
+    except Exception as e:
+        logger.error(f"Health check error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({
+            "status": "error",
+            "success": False,
+            "error": str(e)
+        }), 500
 
 @app.route('/api/auth/token', methods=['POST'])
 def auth_token():
     try:
-        print("Auth token request received", file=sys.stderr)
+        logger.info("Auth token request received")
         # Get request data safely
         data = request.get_json() or {}
-        print(f"Auth request data: {data}", file=sys.stderr)
+        logger.info(f"Auth request data: {data}")
         user_id = data.get('user_id', 'demo_user')
         plan = data.get('plan', 'free')
         
@@ -66,10 +97,10 @@ def auth_token():
                 "plan": plan
             }
         }
-        print(f"Auth response: {response}", file=sys.stderr)
+        logger.info(f"Auth response: {response}")
         return jsonify(response)
     except Exception as e:
-        print(f"Auth token error: {str(e)}", file=sys.stderr)
+        logger.error(f"Auth token error: {str(e)}")
         traceback.print_exc()
         return jsonify({
             "success": False,
@@ -79,7 +110,7 @@ def auth_token():
 @app.route('/api/user/quota', methods=['GET'])
 def user_quota():
     try:
-        print("User quota request received", file=sys.stderr)
+        logger.info("User quota request received")
         # Placeholder quota information
         response = {
             "success": True,
@@ -91,10 +122,10 @@ def user_quota():
                 "reset_date": "2024-02-01T00:00:00Z"
             }
         }
-        print(f"Quota response: {response}", file=sys.stderr)
+        logger.info(f"Quota response: {response}")
         return jsonify(response)
     except Exception as e:
-        print(f"User quota error: {str(e)}", file=sys.stderr)
+        logger.error(f"User quota error: {str(e)}")
         traceback.print_exc()
         return jsonify({
             "success": False,
@@ -104,7 +135,7 @@ def user_quota():
 @app.route('/api/genres', methods=['GET'])
 def get_genres():
     try:
-        print("Genres request received", file=sys.stderr)
+        logger.info("Genres request received")
         # Placeholder music genres
         genres = [
             {"id": "pop", "name": "Pop", "description": "Popular music"},
@@ -121,10 +152,10 @@ def get_genres():
             "success": True,
             "genres": genres
         }
-        print(f"Genres response: {len(genres)} genres", file=sys.stderr)
+        logger.info(f"Genres response: {len(genres)} genres")
         return jsonify(response)
     except Exception as e:
-        print(f"Genres error: {str(e)}", file=sys.stderr)
+        logger.error(f"Genres error: {str(e)}")
         traceback.print_exc()
         return jsonify({
             "success": False,
@@ -134,7 +165,7 @@ def get_genres():
 @app.route('/api/moods', methods=['GET'])
 def get_moods():
     try:
-        print("Moods request received", file=sys.stderr)
+        logger.info("Moods request received")
         # Placeholder music moods
         moods = [
             {"id": "happy", "name": "Happy", "description": "Upbeat and joyful"},
@@ -151,10 +182,10 @@ def get_moods():
             "success": True,
             "moods": moods
         }
-        print(f"Moods response: {len(moods)} moods", file=sys.stderr)
+        logger.info(f"Moods response: {len(moods)} moods")
         return jsonify(response)
     except Exception as e:
-        print(f"Moods error: {str(e)}", file=sys.stderr)
+        logger.error(f"Moods error: {str(e)}")
         traceback.print_exc()
         return jsonify({
             "success": False,
@@ -164,10 +195,10 @@ def get_moods():
 @app.route('/api/generate-music', methods=['POST'])
 def generate_music():
     try:
-        print("Generate music request received", file=sys.stderr)
+        logger.info("Generate music request received")
         data = request.get_json()
         if not data:
-            print("No data provided in request", file=sys.stderr)
+            logger.warning("No data provided in request")
             return jsonify({
                 "success": False,
                 "error": "No data provided"
@@ -178,10 +209,10 @@ def generate_music():
         genre = data.get('genre', 'pop')
         mood = data.get('mood', 'upbeat')
         
-        print(f"Generate music params: prompt='{prompt}', duration={duration}, genre={genre}, mood={mood}", file=sys.stderr)
+        logger.info(f"Generate music params: prompt='{prompt}', duration={duration}, genre={genre}, mood={mood}")
         
         if not prompt.strip():
-            print("Empty prompt provided", file=sys.stderr)
+            logger.warning("Empty prompt provided")
             return jsonify({
                 "success": False,
                 "error": "Prompt is required"
@@ -204,11 +235,11 @@ def generate_music():
                 "created_at": "2024-01-01T00:00:00Z"
             }
         }
-        print(f"Generate music response: {response}", file=sys.stderr)
+        logger.info(f"Generate music response: {response}")
         return jsonify(response)
     
     except Exception as e:
-        print(f"Generate music error: {str(e)}", file=sys.stderr)
+        logger.error(f"Generate music error: {str(e)}")
         traceback.print_exc()
         return jsonify({
             "success": False,
@@ -218,12 +249,12 @@ def generate_music():
 if __name__ == '__main__':
     try:
         port = int(os.environ.get('PORT', 5000))
-        print(f"🚀 Starting Flask server on port {port}...", file=sys.stderr)
-        print(f"📍 Health check available at: http://localhost:{port}/health", file=sys.stderr)
-        print(f"📡 API endpoints available at: http://localhost:{port}/api/", file=sys.stderr)
-        print(f"🔧 CORS enabled for: http://localhost:3000, http://127.0.0.1:3000", file=sys.stderr)
+        logger.info(f"🚀 Starting Flask server on port {port}...")
+        logger.info(f"📍 Health check available at: http://localhost:{port}/health")
+        logger.info(f"📡 API endpoints available at: http://localhost:{port}/api/")
+        logger.info(f"🔧 CORS enabled for multiple origins including localhost:3000 and localhost:5173")
         app.run(host='0.0.0.0', port=port, debug=True)
     except Exception as e:
-        print(f"❌ Failed to start server: {str(e)}", file=sys.stderr)
+        logger.error(f"❌ Failed to start server: {str(e)}")
         traceback.print_exc()
         sys.exit(1)
