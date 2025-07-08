@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Play, 
   Pause, 
@@ -7,8 +7,12 @@ import {
   Music, 
   Settings,
   Volume2,
-  Clock
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  Zap
 } from 'lucide-react'
+import { musicAPI, metadataAPI, authAPI } from '../services/api'
 
 const MusicGenerator = () => {
   const [prompt, setPrompt] = useState('')
@@ -18,35 +22,111 @@ const MusicGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedTrack, setGeneratedTrack] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [genres, setGenres] = useState([])
+  const [moods, setMoods] = useState([])
+  const [userQuota, setUserQuota] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  const genres = [
-    'Pop', 'Rock', 'Electronic', 'Classical', 'Jazz', 'Hip Hop', 
-    'Country', 'Folk', 'Ambient', 'Cinematic'
-  ]
+  useEffect(() => {
+    initializeComponent()
+  }, [])
 
-  const moods = [
-    'Upbeat', 'Calm', 'Energetic', 'Melancholic', 'Mysterious', 
-    'Romantic', 'Epic', 'Peaceful', 'Dramatic', 'Playful'
-  ]
+  const initializeComponent = async () => {
+    try {
+      // Check authentication
+      if (!authAPI.isAuthenticated()) {
+        await authAPI.generateToken('demo_user', 'free')
+      }
+      setIsAuthenticated(true)
+
+      // Load metadata
+      const [genresData, moodsData, quotaData] = await Promise.all([
+        metadataAPI.getGenres(),
+        metadataAPI.getMoods(),
+        musicAPI.getUserQuota()
+      ])
+
+      if (genresData.status === 'success') {
+        setGenres(genresData.genres)
+      }
+      if (moodsData.status === 'success') {
+        setMoods(moodsData.moods)
+      }
+      if (quotaData.status === 'success') {
+        setUserQuota(quotaData.quota)
+      }
+    } catch (error) {
+      console.error('Initialization error:', error)
+      setError('Failed to initialize. Please refresh the page.')
+    }
+  }
 
   const handleGenerate = async () => {
+    if (!prompt.trim()) {
+      setError('Please enter a music description')
+      return
+    }
+
+    if (userQuota && userQuota.remaining_today === 0) {
+      setError('Daily quota exceeded. Please upgrade your plan or try again tomorrow.')
+      return
+    }
+
     setIsGenerating(true)
+    setError('')
+    setSuccess('')
     
-    // Simulate API call
-    setTimeout(() => {
-      setGeneratedTrack({
-        id: Date.now(),
-        title: `${mood} ${genre} Track`,
-        duration: duration,
-        url: '#', // This would be the actual audio URL
-        downloadUrl: '#'
+    try {
+      const result = await musicAPI.generateMusic(prompt, {
+        duration,
+        genre,
+        mood
       })
+
+      if (result.status === 'success') {
+        setGeneratedTrack(result.track)
+        setSuccess('Music generated successfully!')
+        
+        // Update quota
+        const updatedQuota = await musicAPI.getUserQuota()
+        if (updatedQuota.status === 'success') {
+          setUserQuota(updatedQuota.quota)
+        }
+      } else {
+        setError(result.message || 'Failed to generate music')
+      }
+    } catch (error) {
+      console.error('Generation error:', error)
+      if (error.response?.status === 429) {
+        setError('Rate limit exceeded. Please try again later.')
+      } else if (error.response?.status === 401) {
+        setError('Authentication failed. Please refresh the page.')
+        setIsAuthenticated(false)
+      } else {
+        setError(error.message || 'Failed to generate music. Please try again.')
+      }
+    } finally {
       setIsGenerating(false)
-    }, 3000)
+    }
   }
 
   const togglePlayback = () => {
     setIsPlaying(!isPlaying)
+  }
+
+  const handleDownload = () => {
+    if (generatedTrack?.download_url) {
+      window.open(generatedTrack.download_url, '_blank')
+    }
+  }
+
+  const canGenerate = () => {
+    return prompt.trim() && 
+           !isGenerating && 
+           isAuthenticated && 
+           (userQuota?.remaining_today !== 0)
   }
 
   return (
@@ -59,12 +139,48 @@ const MusicGenerator = () => {
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Describe the music you want and let our AI create it for you. 
-            It's that simple!
+            Professional quality, royalty-free music in seconds.
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto">
           <div className="card p-8">
+            {/* User Quota Display */}
+            {userQuota && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Zap className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold text-gray-900">
+                      Plan: {userQuota.plan.charAt(0).toUpperCase() + userQuota.plan.slice(1)}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {userQuota.daily_limit > 0 ? (
+                      <>Remaining today: {userQuota.remaining_today}/{userQuota.daily_limit}</>
+                    ) : (
+                      'Unlimited generations'
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                <span className="text-red-700">{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <span className="text-green-700">{success}</span>
+              </div>
+            )}
+
             {/* Main Input */}
             <div className="mb-8">
               <label className="block text-lg font-semibold text-gray-900 mb-3">
@@ -77,8 +193,9 @@ const MusicGenerator = () => {
                 className="input-field h-32 resize-none"
                 maxLength={500}
               />
-              <div className="text-right text-sm text-gray-500 mt-2">
-                {prompt.length}/500 characters
+              <div className="flex justify-between text-sm text-gray-500 mt-2">
+                <span>{prompt.length}/500 characters</span>
+                <span className="text-xs">💡 Be specific for better results</span>
               </div>
             </div>
 
@@ -115,7 +232,7 @@ const MusicGenerator = () => {
                   className="input-field"
                 >
                   {genres.map(g => (
-                    <option key={g} value={g.toLowerCase()}>{g}</option>
+                    <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
               </div>
@@ -132,7 +249,7 @@ const MusicGenerator = () => {
                   className="input-field"
                 >
                   {moods.map(m => (
-                    <option key={m} value={m.toLowerCase()}>{m}</option>
+                    <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
               </div>
@@ -142,7 +259,7 @@ const MusicGenerator = () => {
             <div className="text-center mb-8">
               <button
                 onClick={handleGenerate}
-                disabled={isGenerating || !prompt.trim()}
+                disabled={!canGenerate()}
                 className="btn-primary text-lg px-12 py-4 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (
@@ -157,6 +274,12 @@ const MusicGenerator = () => {
                   </>
                 )}
               </button>
+              
+              {!isAuthenticated && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Authentication required. Please refresh the page.
+                </p>
+              )}
             </div>
 
             {/* Generated Track */}
@@ -168,7 +291,10 @@ const MusicGenerator = () => {
                       {generatedTrack.title}
                     </h3>
                     <p className="text-gray-600">
-                      Duration: {generatedTrack.duration} seconds
+                      Duration: {generatedTrack.duration} seconds • {generatedTrack.genre} • {generatedTrack.mood}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      License: 100% Royalty-Free
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -185,7 +311,10 @@ const MusicGenerator = () => {
                     <button className="bg-white hover:bg-gray-50 p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105">
                       <Volume2 className="h-6 w-6 text-gray-600" />
                     </button>
-                    <button className="btn-primary flex items-center space-x-2">
+                    <button 
+                      onClick={handleDownload}
+                      className="btn-primary flex items-center space-x-2"
+                    >
                       <Download className="h-4 w-4" />
                       <span>Download</span>
                     </button>
@@ -213,7 +342,7 @@ const MusicGenerator = () => {
                 </div>
 
                 <div className="text-center text-sm text-gray-600">
-                  🎉 Your AI-generated music is ready! This track is 100% royalty-free.
+                  🎉 Your AI-generated music is ready! This track is 100% royalty-free and ready for commercial use.
                 </div>
               </div>
             )}
