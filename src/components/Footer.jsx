@@ -121,7 +121,7 @@ const Footer = () => {
             © 2024 Portal AI Music. All rights reserved.
           </div>
           <div className="flex items-center space-x-6 text-sm text-gray-400">
-            <span>Made with ❤️ for creators</span>
+            <span>Made with ❤️ for creators from TotalCloudAI Limited</span>
             <span>•</span>
             <span>100% Royalty-Free</span>
             <span>•</span>
