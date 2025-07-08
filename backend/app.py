@@ -5,9 +5,28 @@ import sys
 import traceback
 from dotenv import load_dotenv
 import numpy as np
-import wave
 import tempfile
 import uuid
+import time
+import threading
+import warnings
+import wave
+warnings.filterwarnings("ignore")
+
+# Advanced Music Generation imports
+try:
+    import torch
+    import torchaudio
+    from audiocraft.models import MusicGen
+    from audiocraft.data.audio import audio_write
+    import librosa
+    import soundfile as sf
+    MUSICGEN_AVAILABLE = True
+    print("🎵 MusicGen successfully imported", file=sys.stderr)
+except ImportError as e:
+    MUSICGEN_AVAILABLE = False
+    print(f"⚠️  MusicGen not available: {e}", file=sys.stderr)
+    print("🔄 Using advanced procedural music generation", file=sys.stderr)
 
 # Load environment variables
 load_dotenv()
@@ -23,9 +42,36 @@ CORS(app, origins=[
     'http://127.0.0.1:3001',
     'http://localhost:3002',
     'http://127.0.0.1:3002',
+    'http://localhost:3003',
+    'http://127.0.0.1:3003',
+    'http://localhost:3004',
+    'http://127.0.0.1:3004',
     'http://localhost:5173',  # Vite dev server default
     'http://127.0.0.1:5173'
 ])
+
+# Global MusicGen model variable
+musicgen_model = None
+model_lock = threading.Lock()
+
+def initialize_musicgen():
+    """Initialize MusicGen model (lazy loading)"""
+    global musicgen_model
+    with model_lock:
+        if musicgen_model is None and MUSICGEN_AVAILABLE:
+            try:
+                print("🔄 Loading MusicGen model (this may take a few minutes)...", file=sys.stderr)
+                # Use the small model for faster inference
+                musicgen_model = MusicGen.get_pretrained('facebook/musicgen-small')
+                musicgen_model.set_generation_params(duration=30)  # Default 30 seconds
+                print("✅ MusicGen model loaded successfully", file=sys.stderr)
+            except Exception as e:
+                print(f"❌ Failed to load MusicGen model: {e}", file=sys.stderr)
+                traceback.print_exc()
+    return musicgen_model is not None
+
+# Create necessary directories
+os.makedirs('generated_audio', exist_ok=True)
 
 # Add error handling for startup
 @app.errorhandler(500)
@@ -60,7 +106,9 @@ def health_check():
         "status": "healthy", 
         "message": "Backend is running",
         "success": True,
-        "port": os.environ.get('PORT', 5000)
+        "port": os.environ.get('PORT', 5000),
+        "musicgen_available": MUSICGEN_AVAILABLE,
+        "model_loaded": musicgen_model is not None
     })
 
 @app.route('/api/auth/token', methods=['POST'])
@@ -214,17 +262,8 @@ def generate_music():
                 "error": "Prompt is required"
             }), 400
         
-        # Placeholder for music generation logic
-        # In a real implementation, this would integrate with AI music generation services
-        
-        # Generate realistic track data with working audio URLs
-        import random
-        import time
-        
-        # Simulate processing time
-        time.sleep(2)  # 2 seconds to simulate generation
-        
         # Generate track ID and title
+        import random
         track_id = f"track_{int(time.time())}_{random.randint(1000, 9999)}"
         title_templates = [
             f"{genre.title()} {mood.title()} Track",
@@ -234,86 +273,11 @@ def generate_music():
         ]
         selected_title = random.choice(title_templates)
         
-        # Generate audio file
-        def generate_audio_file(frequency=440, duration_seconds=3, sample_rate=22050):
-            """Generate a WAV audio file with sine wave audio"""
-            # Generate sine wave samples
-            num_samples = int(duration_seconds * sample_rate)
-            t = np.linspace(0, duration_seconds, num_samples, False)
-            
-            # Create a more complex waveform for better sound
-            # Primary frequency
-            wave1 = 0.3 * np.sin(2 * np.pi * frequency * t)
-            # Harmonic (octave)
-            wave2 = 0.15 * np.sin(2 * np.pi * frequency * 2 * t)
-            # Fifth harmonic
-            wave3 = 0.1 * np.sin(2 * np.pi * frequency * 3 * t)
-            
-            # Combine waves
-            audio_data = wave1 + wave2 + wave3
-            
-            # Apply fade in/out to prevent clicks
-            fade_length = int(0.1 * sample_rate)  # 0.1 second fade
-            fade_in = np.linspace(0, 1, fade_length)
-            fade_out = np.linspace(1, 0, fade_length)
-            
-            audio_data[:fade_length] *= fade_in
-            audio_data[-fade_length:] *= fade_out
-            
-            # Convert to 16-bit integers
-            audio_data = np.int16(audio_data * 32767)
-            
-            # Create unique filename
-            filename = f"{track_id}.wav"
-            filepath = os.path.join('generated_audio', filename)
-            
-            # Write WAV file
-            with wave.open(filepath, 'w') as wav_file:
-                wav_file.setnchannels(1)  # Mono
-                wav_file.setsampwidth(2)  # 2 bytes per sample
-                wav_file.setframerate(sample_rate)
-                wav_file.writeframes(audio_data.tobytes())
-            
-            return filepath, filename
+        # Create enhanced prompt for better AI generation
+        enhanced_prompt = f"{prompt}, {genre} style, {mood} mood"
         
-        # Generate different audio for each genre/mood combination
-        genre_frequencies = {
-            "cinematic": 220,  # Lower, dramatic
-            "corporate": 440,  # Standard A4
-            "ambient": 330,    # Soft, mid-range
-            "electronic": 880, # Higher, digital
-            "pop": 523,        # C5, catchy
-            "rock": 659,       # E5, energetic
-            "jazz": 370,       # F#4, smooth
-            "classical": 494,  # B4, elegant
-            "hip-hop": 277,    # C#4, urban
-            "folk": 392,       # G4, acoustic
-            "indie": 466,      # A#4, alternative
-            "world": 349       # F4, diverse
-        }
-        
-        # Mood affects duration and volume
-        mood_duration = {
-            "dramatic": 4,
-            "energetic": 3,
-            "calm": 5,
-            "uplifting": 3,
-            "mysterious": 4,
-            "romantic": 5,
-            "melancholic": 4,
-            "triumphant": 3,
-            "playful": 2,
-            "suspenseful": 4,
-            "nostalgic": 5,
-            "meditative": 6
-        }
-        
-        # Select frequency and duration based on genre and mood
-        frequency = genre_frequencies.get(genre.lower(), 440)
-        audio_duration = mood_duration.get(mood.lower(), 3)
-        
-        # Generate the audio file
-        filepath, filename = generate_audio_file(frequency, audio_duration)
+        # Generate audio file using MusicGen or fallback
+        filepath, filename = generate_ai_music(enhanced_prompt, duration, track_id)
         
         # Create URLs for the frontend
         audio_url = f"/api/audio/{filename}"
@@ -344,6 +308,231 @@ def generate_music():
             "error": str(e)
         }), 500
 
+def generate_ai_music(prompt, duration, track_id):
+    """Generate music using MusicGen AI or fallback to simple audio"""
+    filename = f"{track_id}.wav"
+    filepath = os.path.join('generated_audio', filename)
+    
+    if MUSICGEN_AVAILABLE:
+        try:
+            # Initialize model if not already loaded
+            if not initialize_musicgen():
+                raise Exception("Failed to initialize MusicGen model")
+            
+            print(f"🎵 Generating AI music for prompt: '{prompt}' (duration: {duration}s)", file=sys.stderr)
+            
+            # Set generation parameters
+            musicgen_model.set_generation_params(duration=min(duration, 30))  # Max 30 seconds for small model
+            
+            # Generate music using MusicGen
+            descriptions = [prompt]
+            wav = musicgen_model.generate(descriptions)
+            
+            # Save the generated audio
+            for idx, one_wav in enumerate(wav):
+                # Convert to CPU and save
+                audio_write(filepath[:-4], one_wav.cpu().squeeze(0), musicgen_model.sample_rate, strategy="loudness")
+                print(f"✅ AI music generated successfully: {filename}", file=sys.stderr)
+                break
+            
+            return filepath, filename
+            
+        except Exception as e:
+            print(f"❌ MusicGen generation failed: {e}", file=sys.stderr)
+            print("🔄 Falling back to simple audio generation", file=sys.stderr)
+            traceback.print_exc()
+    
+    # Fallback to simple audio generation
+    return generate_fallback_audio(prompt, duration, track_id)
+
+def generate_fallback_audio(prompt, duration, track_id):
+    """Generate advanced procedural music based on prompt analysis"""
+    filename = f"{track_id}.wav"
+    filepath = os.path.join('generated_audio', filename)
+    
+    sample_rate = 44100  # Higher quality audio
+    audio_duration = min(duration, 30)  # Limit to 30 seconds
+    
+    # Analyze prompt for musical characteristics
+    prompt_lower = prompt.lower()
+    
+    # Determine key and scale
+    key_frequencies = {
+        'c': 261.63, 'c#': 277.18, 'd': 293.66, 'd#': 311.13,
+        'e': 329.63, 'f': 349.23, 'f#': 369.99, 'g': 392.00,
+        'g#': 415.30, 'a': 440.00, 'a#': 466.16, 'b': 493.88
+    }
+    
+    # Choose key based on mood
+    if any(word in prompt_lower for word in ['happy', 'bright', 'joyful', 'upbeat']):
+        root_freq = key_frequencies['c']  # C major
+        scale = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8]  # Major scale
+        tempo = 120
+    elif any(word in prompt_lower for word in ['sad', 'melancholic', 'dark', 'minor']):
+        root_freq = key_frequencies['a']  # A minor
+        scale = [1, 9/8, 6/5, 4/3, 3/2, 8/5, 9/5]  # Natural minor scale
+        tempo = 80
+    elif any(word in prompt_lower for word in ['energetic', 'rock', 'fast', 'aggressive']):
+        root_freq = key_frequencies['e']  # E major
+        scale = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8]
+        tempo = 140
+    elif any(word in prompt_lower for word in ['calm', 'peaceful', 'ambient', 'soft']):
+        root_freq = key_frequencies['f']  # F major
+        scale = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8]
+        tempo = 60
+    else:
+        root_freq = key_frequencies['g']  # G major (default)
+        scale = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8]
+        tempo = 100
+    
+    # Generate chord progression
+    def generate_chord_progression():
+        if 'rock' in prompt_lower or 'aggressive' in prompt_lower:
+            return [1, 6, 4, 5]  # vi-IV-I-V (rock progression)
+        elif 'jazz' in prompt_lower:
+            return [1, 6, 2, 5]  # ii-V-I-vi (jazz progression)
+        elif 'pop' in prompt_lower:
+            return [1, 5, 6, 4]  # I-V-vi-IV (pop progression)
+        else:
+            return [1, 4, 5, 1]  # I-IV-V-I (classic progression)
+    
+    progression = generate_chord_progression()
+    
+    # Generate time array
+    num_samples = int(audio_duration * sample_rate)
+    t = np.linspace(0, audio_duration, num_samples, False)
+    
+    # Initialize audio buffer
+    audio_data = np.zeros(num_samples)
+    
+    # Generate bass line
+    beats_per_second = tempo / 60
+    chord_duration = 2.0  # Each chord lasts 2 seconds
+    
+    for i, chord_degree in enumerate(progression):
+        start_time = i * chord_duration
+        end_time = min((i + 1) * chord_duration, audio_duration)
+        
+        if start_time >= audio_duration:
+            break
+            
+        start_sample = int(start_time * sample_rate)
+        end_sample = int(end_time * sample_rate)
+        
+        # Bass frequency (root of chord)
+        bass_freq = root_freq * scale[chord_degree - 1] / 2  # One octave down
+        
+        # Generate bass line with rhythm
+        t_segment = t[start_sample:end_sample]
+        bass_wave = 0.3 * np.sin(2 * np.pi * bass_freq * t_segment)
+        
+        # Add rhythm (emphasize beats)
+        rhythm_freq = beats_per_second
+        rhythm_envelope = 0.7 + 0.3 * np.sin(2 * np.pi * rhythm_freq * t_segment)
+        bass_wave *= rhythm_envelope
+        
+        audio_data[start_sample:end_sample] += bass_wave
+    
+    # Generate melody line
+    melody_notes = [1, 3, 5, 3, 2, 4, 6, 5]  # Scale degrees
+    note_duration = 0.5  # Each note lasts 0.5 seconds
+    
+    for i, note_degree in enumerate(melody_notes * int(audio_duration / (len(melody_notes) * note_duration) + 1)):
+        start_time = i * note_duration
+        end_time = min((i + 1) * note_duration, audio_duration)
+        
+        if start_time >= audio_duration:
+            break
+            
+        start_sample = int(start_time * sample_rate)
+        end_sample = int(end_time * sample_rate)
+        
+        # Melody frequency
+        melody_freq = root_freq * scale[(note_degree - 1) % len(scale)] * 2  # One octave up
+        
+        t_segment = t[start_sample:end_sample]
+        
+        # Generate melody with attack and decay
+        envelope = np.exp(-5 * (t_segment - start_time))
+        melody_wave = 0.2 * envelope * np.sin(2 * np.pi * melody_freq * t_segment)
+        
+        # Add some harmonics for richness
+        melody_wave += 0.1 * envelope * np.sin(2 * np.pi * melody_freq * 2 * t_segment)
+        melody_wave += 0.05 * envelope * np.sin(2 * np.pi * melody_freq * 3 * t_segment)
+        
+        audio_data[start_sample:end_sample] += melody_wave
+    
+    # Add chord harmonies
+    for i, chord_degree in enumerate(progression):
+        start_time = i * chord_duration
+        end_time = min((i + 1) * chord_duration, audio_duration)
+        
+        if start_time >= audio_duration:
+            break
+            
+        start_sample = int(start_time * sample_rate)
+        end_sample = int(end_time * sample_rate)
+        
+        t_segment = t[start_sample:end_sample]
+        
+        # Triad (root, third, fifth)
+        for j, interval in enumerate([1, 3, 5]):
+            harmony_freq = root_freq * scale[(chord_degree + interval - 2) % len(scale)]
+            harmony_wave = 0.1 * np.sin(2 * np.pi * harmony_freq * t_segment)
+            
+            # Add subtle amplitude modulation for movement
+            mod_freq = 0.5 + j * 0.2
+            modulation = 0.8 + 0.2 * np.sin(2 * np.pi * mod_freq * t_segment)
+            harmony_wave *= modulation
+            
+            audio_data[start_sample:end_sample] += harmony_wave
+    
+    # Add percussion/rhythm track
+    if 'rock' in prompt_lower or 'energetic' in prompt_lower:
+        kick_freq = 60  # Kick drum frequency
+        for beat in np.arange(0, audio_duration, 60/tempo):
+            if beat >= audio_duration:
+                break
+            start_sample = int(beat * sample_rate)
+            end_sample = min(start_sample + int(0.1 * sample_rate), num_samples)
+            
+            t_drum = np.linspace(0, 0.1, end_sample - start_sample, False)
+            kick_wave = 0.3 * np.exp(-20 * t_drum) * np.sin(2 * np.pi * kick_freq * t_drum)
+            audio_data[start_sample:end_sample] += kick_wave
+    
+    # Apply filters based on genre
+    if 'ambient' in prompt_lower or 'soft' in prompt_lower:
+        # Low-pass filter effect (simple moving average)
+        window_size = int(sample_rate * 0.001)  # 1ms window
+        audio_data = np.convolve(audio_data, np.ones(window_size)/window_size, mode='same')
+    
+    # Apply dynamic range and normalization
+    audio_data = np.tanh(audio_data)  # Soft clipping
+    max_amplitude = np.max(np.abs(audio_data))
+    if max_amplitude > 0:
+        audio_data = audio_data * 0.8 / max_amplitude  # Normalize to 80% of max
+    
+    # Apply fade in/out
+    fade_length = int(0.2 * sample_rate)  # 0.2 second fade
+    fade_in = np.linspace(0, 1, fade_length)
+    fade_out = np.linspace(1, 0, fade_length)
+    
+    audio_data[:fade_length] *= fade_in
+    audio_data[-fade_length:] *= fade_out
+    
+    # Convert to 16-bit integers
+    audio_data = np.int16(audio_data * 32767)
+    
+    # Write WAV file
+    with wave.open(filepath, 'w') as wav_file:
+        wav_file.setnchannels(1)  # Mono
+        wav_file.setsampwidth(2)  # 2 bytes per sample
+        wav_file.setframerate(sample_rate)
+        wav_file.writeframes(audio_data.tobytes())
+    
+    print(f"🎼 Advanced procedural music generated: {filename}", file=sys.stderr)
+    return filepath, filename
+
 @app.route('/api/audio/<filename>', methods=['GET'])
 def serve_audio(filename):
     try:
@@ -373,7 +562,7 @@ def serve_audio(filename):
 
 if __name__ == '__main__':
     try:
-        port = int(os.environ.get('PORT', 5000))
+        port = int(os.environ.get('PORT', 5001))
         print(f"🚀 Starting Flask server on port {port}...", file=sys.stderr)
         print(f"📍 Health check available at: http://localhost:{port}/health", file=sys.stderr)
         print(f"📡 API endpoints available at: http://localhost:{port}/api/", file=sys.stderr)

@@ -39,7 +39,7 @@ const MusicGenerator = () => {
       // First check if backend is available
       try {
         console.log('Starting health check...')
-        const healthResponse = await fetch('http://localhost:9000/health', {
+        const healthResponse = await fetch('http://localhost:5001/health', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ const MusicGenerator = () => {
             // Build full URL if the track URL is relative
             const audioUrl = generatedTrack.url.startsWith('http') 
               ? generatedTrack.url 
-              : `http://localhost:9000${generatedTrack.url}`
+              : `http://localhost:5001${generatedTrack.url}`
             console.log('Full audio URL:', audioUrl)
             audioRef.current.src = audioUrl
             // Wait for the audio to load
@@ -261,7 +261,7 @@ const MusicGenerator = () => {
       // Build full URL if the download URL is relative
       const downloadUrl = generatedTrack.download_url.startsWith('http') 
         ? generatedTrack.download_url 
-        : `http://localhost:9000${generatedTrack.download_url}`
+        : `http://localhost:5001${generatedTrack.download_url}`
       window.open(downloadUrl, '_blank')
     }
   }
@@ -332,7 +332,7 @@ const MusicGenerator = () => {
         // Build full URL if the track URL is relative
         const audioUrl = generatedTrack.url.startsWith('http') 
           ? generatedTrack.url 
-          : `http://localhost:9000${generatedTrack.url}`
+          : `http://localhost:5001${generatedTrack.url}`
         console.log('Full audio URL for useEffect:', audioUrl)
         audio.src = audioUrl
         audio.load() // Force reload
