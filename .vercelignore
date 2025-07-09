@@ -1,0 +1,2 @@
+# This file helps Vercel identify this as a Next.js project when deploying from GitHub
+framework = "nextjs"

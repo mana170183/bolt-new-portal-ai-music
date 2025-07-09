@@ -1,6 +1,6 @@
 # Portal AI Music 🎵
 
-A modern AI-powered music generation platform that creates royalty-free music from text descriptions. Built with React, Flask, and Azure cloud services.
+A modern AI-powered music generation platform that creates royalty-free music from text descriptions. Built with Next.js, Prisma, PostgreSQL, and deployed on Vercel.
 
 ![Portal AI Music](https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center)
 

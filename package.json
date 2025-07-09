@@ -5,14 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "vercel-build": "node scripts/github-vercel-build.js",
     "start": "next start",
     "preview": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "legacy:dev": "vite",
     "legacy:build": "vite build",
-    "postinstall": "prisma generate"
+    "postinstall": "npx prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:deploy": "npx prisma generate && vercel --prod",
+    "deploy": "npx prisma generate && vercel --prod",
+    "vercel-deploy": "vercel --prod",
+    "db:push": "prisma db push",
+    "github-deploy": "./scripts/vercel-deploy-direct.sh"
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.34",

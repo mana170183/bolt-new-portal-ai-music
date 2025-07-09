@@ -1,26 +1,21 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next",
-      "config": {
-        "outputDirectory": ".next"
-      }
+  "framework": "nextjs",
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "github": {
+    "enabled": true,
+    "silent": false
+  },
+  "functions": {
+    "api/*.js": {
+      "memory": 1024
+    },
+    "src/app/api/**/*": {
+      "memory": 1024
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/legacy/(.*)",
-      "dest": "${BACKEND_URL}/api/$1",
-      "status": 307
-    }
-  ],
+  },
   "env": {
-    "NEXT_PUBLIC_API_URL": "/api",
-    "BACKEND_URL": "https://portal-ai-music-backend.yourdomain.com",
-    "DATABASE_URL": "${DATABASE_URL}",
-    "PRISMA_DATABASE_URL": "${PRISMA_DATABASE_URL}",
-    "POSTGRES_URL": "${POSTGRES_URL}"
+    "NEXT_PUBLIC_API_URL": "/api"
   }
 }

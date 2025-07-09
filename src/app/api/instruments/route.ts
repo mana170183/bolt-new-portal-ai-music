@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma-dynamic';
 
-// List of instruments available for music generation
-const instruments = [
+// List of instruments available for music generation (fallback data)
+const defaultInstruments = [
   "Acoustic Guitar",
   "Electric Guitar",
   "Piano",
@@ -53,17 +53,29 @@ const instruments = [
 
 export async function GET() {
   try {
-    // This is just a placeholder - in the future, you could store instruments in the database
-    // For now, we'll return a static list
+    // Try to get prisma client and check database connection
+    const prisma = await getPrisma();
+    
+    // Just check if we can connect (no actual instruments table yet)
+    await prisma.user.count();
+    
+    // Database connection succeeded, return instruments with DB status
     return NextResponse.json({ 
       success: true,
-      instruments
+      instruments: defaultInstruments,
+      source: "database-connection-verified", 
+      timestamp: new Date().toISOString()
     });
+    
   } catch (error) {
-    console.error('Error retrieving instruments:', error);
+    console.error("Database connection error in instruments route:", error);
+    
+    // Return fallback data if database connection fails
     return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : String(error) 
-    }, { status: 500 });
+      success: true,
+      instruments: defaultInstruments,
+      source: "fallback-data",
+      timestamp: new Date().toISOString()
+    });
   }
 }

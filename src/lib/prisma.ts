@@ -6,34 +6,35 @@ import { PrismaClient } from '@prisma/client';
  * Learn more: https://pris.ly/d/help/next-js-best-practices
  */
 
-// Check if we're in a build context (important for Next.js builds)
-const isBuild = process.env.NODE_ENV === 'production' && process.argv.includes('build');
-
-// Create a mock client to use during builds
-const createMockPrismaClient = () => {
-  return {
-    $connect: () => Promise.resolve(),
-    $disconnect: () => Promise.resolve(),
-    user: {
-      findMany: () => Promise.resolve([]),
-      count: () => Promise.resolve(0),
-      create: () => Promise.resolve({}),
-    },
-    // Add other models as needed
-  } as unknown as PrismaClient;
-}
-
+// Define globalThis type for Prisma
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma || 
-  (isBuild ? 
-    createMockPrismaClient() : 
-    new PrismaClient()
-  );
+// Function to determine if we're in a build environment (Next.js edge case)
+const isBuildPhase = () => {
+  return process.env.NODE_ENV === 'production' && 
+         (process.argv.includes('build') || process.env.VERCEL_ENV === 'development');
+};
 
-// Save the client instance to avoid recreating it
+// Don't initialize during build (avoids Prisma query engine issues during build)
+const createClient = () => {
+  if (isBuildPhase()) {
+    // Return minimal mock client during build
+    return {
+      $connect: () => Promise.resolve(),
+      $disconnect: () => Promise.resolve(),
+    } as unknown as PrismaClient;
+  }
+  
+  // For runtime, create a real client
+  return new PrismaClient();
+};
+
+// Create or reuse the Prisma client
+export const prisma = globalForPrisma.prisma || createClient();
+
+// Save the client in development to avoid too many connections
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }

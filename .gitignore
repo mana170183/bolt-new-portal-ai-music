@@ -60,3 +60,4 @@ debug_frontend.html
 test_*.html
 test_*.py
 simple_mode_test.html
+.vercel

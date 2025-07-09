@@ -3,12 +3,15 @@
 
 generator client {
   provider = "prisma-client-js"
+  // These settings help with serverless deployments like Vercel
+  previewFeatures = ["driverAdapters"]
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("POSTGRES_URL")
+  url       = env("PRISMA_DATABASE_URL") // Primary connection via Prisma Accelerate
+  directUrl = env("POSTGRES_URL") // Direct connection for migrations and other operations
 }
 
 model User {
