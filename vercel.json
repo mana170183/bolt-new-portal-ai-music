@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/api/legacy/(.*)",
-      "dest": "http://localhost:5000/api/$1",
+      "dest": "${BACKEND_URL}/api/$1",
       "status": 307
     }
   ],
