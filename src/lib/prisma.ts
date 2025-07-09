@@ -11,10 +11,12 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Function to determine if we're in a build environment (Next.js edge case)
+// Function to determine if we're in a build environment
 const isBuildPhase = () => {
   return process.env.NODE_ENV === 'production' && 
-         (process.argv.includes('build') || process.env.VERCEL_ENV === 'development');
+         (process.argv.includes('build') || 
+          process.env.VERCEL_ENV === 'development' ||
+          process.env.NETLIFY === 'true');
 };
 
 // Don't initialize during build (avoids Prisma query engine issues during build)
@@ -27,7 +29,11 @@ const createClient = () => {
     } as unknown as PrismaClient;
   }
   
-  // For runtime, create a real client
+  // For runtime, create a real client with proper configuration
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error'] : ['error'],
+    errorFormat: 'pretty',
+  });
   return new PrismaClient();
 };
 

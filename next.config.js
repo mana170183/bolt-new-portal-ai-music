@@ -8,7 +8,7 @@ const nextConfig = {
     unoptimized: true,
   },
   // Support for audio files
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.module.rules.push({
       test: /\.(mp3|wav|ogg|m4a)$/,
       use: {
@@ -19,6 +19,12 @@ const nextConfig = {
         },
       },
     });
+
+    // Fix for Prisma in serverless environments
+    if (isServer) {
+      config.externals.push('_http_common');
+    }
+
     return config;
   },
   // Environment variables
@@ -27,6 +33,13 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
   trailingSlash: false,
+  // Skip static optimization for API routes with database connections
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client'],
+    outputFileTracingIncludes: {
+      '/api/**/*': ['./node_modules/@prisma/client/runtime/*'],
+    },
+  },
 };
 
 export default nextConfig;
