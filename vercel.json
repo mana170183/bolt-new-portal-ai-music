@@ -1,22 +1,37 @@
 {
   "version": 2,
-  "name": "portal-ai-music",
   "framework": "nextjs",
-  "public": true,
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "installCommand": "npm install",
-  "devCommand": "npm run dev",
+  "regions": ["iad1"],
+  "public": true,
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
   "env": {
-    "NEXT_PUBLIC_API_URL": "/api"
+    "NEXT_PUBLIC_API_URL": "/api",
+    "VERCEL_PROTECTION_BYPASS": "true"
   },
   "build": {
     "env": {
-      "NEXT_PUBLIC_API_URL": "/api"
+      "NEXT_PUBLIC_API_URL": "/api",
+      "VERCEL_PROTECTION_BYPASS": "true"
     }
   },
   "cleanUrls": true,
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
     {
       "source": "/api/(.*)",
       "headers": [
