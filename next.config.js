@@ -5,7 +5,6 @@ const nextConfig = {
   },
   skipTrailingSlashRedirect: true,
   skipMiddlewareUrlNormalize: true,
-  output: 'export',
   images: {
     domains: ['images.unsplash.com'],
     unoptimized: true,
