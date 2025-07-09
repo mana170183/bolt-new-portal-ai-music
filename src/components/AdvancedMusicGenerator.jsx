@@ -239,7 +239,7 @@ const AdvancedMusicGenerator = () => {
       const audio = audioRef.current;
       const audioUrl = generatedTrack.url.startsWith('http')
         ? generatedTrack.url
-        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${generatedTrack.url}`;
+        : `/api${generatedTrack.url}`;
       
       audio.src = audioUrl;
       audio.load();
@@ -258,7 +258,7 @@ const AdvancedMusicGenerator = () => {
     if (generatedTrack?.download_url) {
       const downloadUrl = generatedTrack.download_url.startsWith('http')
         ? generatedTrack.download_url
-        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${generatedTrack.download_url}`;
+        : `/api${generatedTrack.download_url}`;
       window.open(downloadUrl, '_blank');
     }
   };
@@ -275,7 +275,7 @@ const AdvancedMusicGenerator = () => {
   const downloadStem = (instrument, url) => {
     const downloadUrl = url.startsWith('http')
       ? url
-      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${url}`;
+      : `/api${url}`;
     window.open(downloadUrl, '_blank');
   };
 

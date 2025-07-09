@@ -341,7 +341,7 @@ const MusicGenerator = () => {
         // Build full URL if the track URL is relative
         const audioUrl = generatedTrack.url.startsWith('http') 
           ? generatedTrack.url 
-          : `http://localhost:5002${generatedTrack.url}`;
+          : `${API_BASE_URL}${generatedTrack.url}`;
         console.log('Full audio URL for useEffect:', audioUrl);
         audio.src = audioUrl;
         audio.load(); // Force reload
