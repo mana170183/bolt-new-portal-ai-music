@@ -1,5 +1,5 @@
 [build]
-  command = "npm run prisma:generate && npm run build"
+  command = "npm run prisma:generate && next build"
   publish = ".next"
 
 [build.environment]
@@ -7,15 +7,24 @@
   NODE_ENV = "production"
   NETLIFY_NEXT_PLUGIN_SKIP = "false"
   NPM_FLAGS = "--legacy-peer-deps"
-  # Skip Next.js static generation to avoid Prisma issues
   NEXT_PUBLIC_DEPLOYMENT_ENV = "netlify"
   NEXT_DISABLE_SOURCEMAPS = "1"
   NEXT_TELEMETRY_DISABLED = "1"
+  # Skip Prisma during SSG to prevent errors
+  SKIP_PRISMA_GENERATE = "true"
 
 [functions]
-  # Increase the timeout for functions to accommodate longer operations
   node_bundler = "esbuild"
   included_files = ["node_modules/.prisma/**", "prisma/**"]
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[plugins]]
+  package = "netlify-plugin-prisma-provider"
+  
+  [plugins.inputs]
+  script = "npx prisma generate"
 
 # Essential plugin for Next.js on Netlify
 [[plugins]]

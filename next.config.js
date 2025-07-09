@@ -2,10 +2,10 @@
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
-    // Skip static site generation during build to avoid Prisma issues
-    skipTrailingSlashRedirect: true,
-    skipMiddlewareUrlNormalize: true,
   },
+  skipTrailingSlashRedirect: true,
+  skipMiddlewareUrlNormalize: true,
+  output: 'standalone',
   images: {
     domains: ['images.unsplash.com'],
     unoptimized: true,
