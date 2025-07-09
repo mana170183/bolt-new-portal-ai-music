@@ -9,10 +9,14 @@ export async function GET() {
     let userCount = 0;
     
     try {
-      userCount = await prisma.$queryRaw`SELECT COUNT(*) FROM users`;
-      // If that fails, fallback to the client method
+      // Use a more direct query that returns a number
+      const result = await prisma.user.count();
+      userCount = result;
     } catch (err) {
-      userCount = await prisma.user.count();
+      console.error('Prisma count error:', err);
+      // If count fails, try a raw query but convert BigInt to number
+      const rawResult = await prisma.$queryRaw`SELECT COUNT(*) as count FROM users`;
+      userCount = Number((rawResult as any)[0]?.count || 0);
     }
     
     // Database connection succeeded
@@ -21,7 +25,8 @@ export async function GET() {
         success: true, 
         message: 'Database connection successful',
         count: userCount,
-        db_provider: process.env.DATABASE_PROVIDER || 'postgres',
+        db_provider: 'postgres',
+        prisma_version: '6.11.1',
         timestamp: new Date().toISOString(),
       }, 
       { status: 200 }
