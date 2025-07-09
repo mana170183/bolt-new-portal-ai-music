@@ -6,15 +6,19 @@
   NEXT_PUBLIC_API_URL = "/api"
   NODE_ENV = "production"
 
+# Next.js API routes will be converted to Netlify Functions
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
-[functions]
-  directory = "netlify/functions"
+# Handle Next.js routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
-# For Next.js compatibility
+# Essential plugin for Next.js on Netlify
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
@@ -22,4 +26,7 @@
   NEXT_PUBLIC_API_URL = "/api"
 
 [context.deploy-preview.environment]
+  NEXT_PUBLIC_API_URL = "/api"
+
+[context.branch-deploy.environment]
   NEXT_PUBLIC_API_URL = "/api"
