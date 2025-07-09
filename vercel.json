@@ -1,15 +1,12 @@
 {
+  "version": 2,
+  "name": "portal-ai-music",
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "regions": ["iad1"],
   "public": true,
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
   "env": {
     "NEXT_PUBLIC_API_URL": "/api"
   },
