@@ -33,13 +33,8 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
   trailingSlash: false,
-  // Skip static optimization for API routes with database connections
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
-    outputFileTracingIncludes: {
-      '/api/**/*': ['./node_modules/@prisma/client/runtime/*'],
-    },
-  },
+  // Disable static optimization to prevent build-time Prisma issues
+  output: 'standalone',
 };
 
 export default nextConfig;

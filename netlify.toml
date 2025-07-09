@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "SKIP_DATABASE_SETUP=true npm run build"
   publish = ".next"
 
 [build.environment]
@@ -7,6 +7,7 @@
   NODE_ENV = "production"
   NETLIFY_NEXT_PLUGIN_SKIP = "false"
   NPM_FLAGS = "--legacy-peer-deps"
+  SKIP_DATABASE_SETUP = "true"
 
 # Essential plugin for Next.js on Netlify
 [[plugins]]
