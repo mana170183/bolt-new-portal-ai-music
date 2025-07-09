@@ -1,7 +1,13 @@
 import axios from 'axios';
 
-// API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
+// API Configuration - Force use of /api for production
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '/api' : '/api');
+
+console.log('API Base URL:', API_BASE_URL);
+console.log('Environment variables:', {
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  NODE_ENV: process.env.NODE_ENV
+});
 
 // Create axios instance with default config
 const api = axios.create({
