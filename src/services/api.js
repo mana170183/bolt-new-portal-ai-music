@@ -184,7 +184,7 @@ export const metadataAPI = {
 export const healthAPI = {
   async checkHealth() {
     try {
-      const response = await api.get('/health');
+      const response = await api.get('/api/health');
       return response.data;
     } catch (error) {
       console.error('Health check failed:', error);
