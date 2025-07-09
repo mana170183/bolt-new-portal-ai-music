@@ -47,14 +47,18 @@ const MusicGenerator = () => {
       console.log('Health check successful:', healthData)
 
       // Authenticate
+      console.log('Checking authentication...')
       if (!authAPI.isAuthenticated()) {
+        console.log('Generating token...')
         await authAPI.generateToken('demo_user', 'free')
+        console.log('Token generated successfully')
       }
       setIsAuthenticated(true)
 
       // Load metadata
       let genresData, moodsData, quotaData;
       try {
+        console.log('Loading metadata...')
         [genresData, moodsData, quotaData] = await Promise.all([
           metadataAPI.getGenres(),
           metadataAPI.getMoods(),
@@ -105,7 +109,9 @@ const MusicGenerator = () => {
 
     } catch (error) {
       console.error('Initialization error:', error)
-      setError(`Failed to initialize: ${error.message || 'Unknown error'}. Please ensure the backend server is running and refresh the page.`)
+      const errorStatus = error?.response?.status;
+      const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error';
+      setError(`Failed to initialize: Request failed with status code ${errorStatus || 'unknown'} (${errorMessage}). Please ensure the backend server is running and refresh the page.`)
     }
   }
 

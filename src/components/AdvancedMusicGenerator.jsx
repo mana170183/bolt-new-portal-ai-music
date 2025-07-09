@@ -90,30 +90,48 @@ const AdvancedMusicGenerator = () => {
         let moodsResponse = { moods: [] };
         let quotaResponse = {};
         let errorMessages = [];
+        
+        console.log("Starting API calls...");
+        
         try {
+          console.log("Calling instruments API...");
           instrumentsResponse = await metadataAPI.getInstruments();
+          console.log("Instruments API success:", instrumentsResponse);
         } catch (e) {
-          errorMessages.push('Instruments: ' + (e?.message || e));
+          console.error("Instruments API error:", e);
+          errorMessages.push('Instruments: ' + (e?.response?.status || e?.message || e));
         }
         try {
+          console.log("Calling templates API...");
           templatesResponse = await metadataAPI.getCompositionTemplates();
+          console.log("Templates API success:", templatesResponse);
         } catch (e) {
-          errorMessages.push('Templates: ' + (e?.message || e));
+          console.error("Templates API error:", e);
+          errorMessages.push('Templates: ' + (e?.response?.status || e?.message || e));
         }
         try {
+          console.log("Calling genres API...");
           genresResponse = await metadataAPI.getGenres();
+          console.log("Genres API success:", genresResponse);
         } catch (e) {
-          errorMessages.push('Genres: ' + (e?.message || e));
+          console.error("Genres API error:", e);
+          errorMessages.push('Genres: ' + (e?.response?.status || e?.message || e));
         }
         try {
+          console.log("Calling moods API...");
           moodsResponse = await metadataAPI.getMoods();
+          console.log("Moods API success:", moodsResponse);
         } catch (e) {
-          errorMessages.push('Moods: ' + (e?.message || e));
+          console.error("Moods API error:", e);
+          errorMessages.push('Moods: ' + (e?.response?.status || e?.message || e));
         }
         try {
+          console.log("Calling quota API...");
           quotaResponse = await musicAPI.getUserQuota();
+          console.log("Quota API success:", quotaResponse);
         } catch (e) {
-          errorMessages.push('Quota: ' + (e?.message || e));
+          console.error("Quota API error:", e);
+          errorMessages.push('Quota: ' + (e?.response?.status || e?.message || e));
         }
 
         setAvailableInstruments(instrumentsResponse?.instruments || []);
