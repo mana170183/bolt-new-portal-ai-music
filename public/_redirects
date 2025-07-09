@@ -1,0 +1,4 @@
+# Handle API routes
+/api/*  /.netlify/functions/:splat  200
+# Handle all other routes with the index
+/*    /index.html   200

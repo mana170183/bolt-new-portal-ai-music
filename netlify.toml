@@ -6,6 +6,7 @@
   NEXT_PUBLIC_API_URL = "/api"
   NODE_ENV = "production"
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NETLIFY_USE_NEXT_PLUGIN = "false"
   NPM_FLAGS = "--legacy-peer-deps"
   NEXT_PUBLIC_DEPLOYMENT_ENV = "netlify"
   NEXT_DISABLE_SOURCEMAPS = "1"
