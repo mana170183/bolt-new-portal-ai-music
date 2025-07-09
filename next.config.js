@@ -2,6 +2,9 @@
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
+    // Skip static site generation during build to avoid Prisma issues
+    skipTrailingSlashRedirect: true,
+    skipMiddlewareUrlNormalize: true,
   },
   images: {
     domains: ['images.unsplash.com'],
@@ -20,7 +23,7 @@ const nextConfig = {
       },
     });
 
-    // Fix for Prisma in serverless environments
+    // Fix for Prisma in Netlify serverless environments
     if (isServer) {
       config.externals.push('_http_common');
     }

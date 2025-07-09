@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "netlify-build": "npx prisma generate --binary-targets=debian-openssl-1.1.x && next build",
-    "vercel-build": "node scripts/github-vercel-build.js",
+    "prisma:generate": "prisma generate",
+    "netlify": "netlify dev",
+    "netlify:deploy": "netlify deploy --prod",
     "start": "next start",
     "preview": "next start",
     "lint": "next lint",
@@ -15,12 +16,7 @@
     "legacy:dev": "vite",
     "legacy:build": "vite build",
     "postinstall": "npx prisma generate",
-    "prisma:generate": "prisma generate",
-    "prisma:deploy": "npx prisma generate && vercel --prod",
-    "deploy": "npx prisma generate && vercel --prod",
-    "vercel-deploy": "vercel --prod",
-    "db:push": "prisma db push",
-    "github-deploy": "./scripts/vercel-deploy-direct.sh"
+    "db:push": "prisma db push"
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.34",
