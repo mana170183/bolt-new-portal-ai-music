@@ -3,13 +3,14 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // Test database connection
-    await prisma.$connect();
+    // Try to perform a simple operation to test connection
+    const count = await prisma.user.count();
     
     return NextResponse.json(
       { 
         success: true, 
         message: 'Database connection successful',
+        count: count,
         timestamp: new Date().toISOString(),
       }, 
       { status: 200 }
@@ -25,7 +26,5 @@ export async function GET() {
       }, 
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

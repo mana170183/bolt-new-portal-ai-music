@@ -5,13 +5,11 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Initialize Prisma client with proper logging
+// Initialize Prisma client with minimal settings to avoid compatibility issues
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' 
-      ? ['query', 'error', 'warn'] 
-      : ['error'],
+    // Use minimal settings to avoid compatibility issues on different platforms
   });
 
 // Save the client in development to avoid multiple instances

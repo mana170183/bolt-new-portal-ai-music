@@ -3,9 +3,6 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // Connect to the database
-    await prisma.$connect();
-    
     // Get all users (limited to 10 for safety)
     const users = await prisma.user.findMany({
       take: 10,
@@ -32,8 +29,6 @@ export async function GET() {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

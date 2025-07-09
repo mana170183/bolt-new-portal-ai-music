@@ -55,10 +55,6 @@ export async function GET() {
   try {
     // This is just a placeholder - in the future, you could store instruments in the database
     // For now, we'll return a static list
-    
-    // Connect to database to verify the connection works
-    await prisma.$connect();
-    
     return NextResponse.json({ 
       success: true,
       instruments
@@ -69,7 +65,5 @@ export async function GET() {
       success: false, 
       error: error instanceof Error ? error.message : String(error) 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
