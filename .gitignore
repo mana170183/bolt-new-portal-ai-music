@@ -1,3 +1,62 @@
+# Dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production builds
+dist/
+build/
+.next/
+out/
+
+# Environment variables
 .env
-backend/generated_audio/*.wav
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache and temporary files
+.cache/
+.tmp/
+*.log
+backend.log
+*.pyc
+__pycache__/
+
+# Generated audio files
+backend/generated_audio/
+*.wav
+*.mp3
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+
+# Python
+venv/
+env/
+.python-version
+
+# Documentation and temp files
+ADVANCE_STUDIO_REVIEW.md
+IMPLEMENTATION_COMPLETE.md
+IMPLEMENTATION_TIMELINE.md
+README_COMPREHENSIVE.md
+SETUP_COMPLETE.md
+UPGRADE_COMPLETE_REPORT.md
+debug_frontend.html
+test_*.html
+test_*.py
+simple_mode_test.html
