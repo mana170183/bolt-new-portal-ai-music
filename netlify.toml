@@ -1,25 +1,20 @@
 [build]
   command = "npm run netlify:build"
-  publish = ".next"
+  publish = "out"
 
 [build.environment]
   NEXT_PUBLIC_API_URL = "/api"
   NODE_ENV = "production"
-  NETLIFY_NEXT_PLUGIN_SKIP = "false"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
   NPM_FLAGS = "--legacy-peer-deps"
   NEXT_PUBLIC_DEPLOYMENT_ENV = "netlify"
   NEXT_DISABLE_SOURCEMAPS = "1"
   NEXT_TELEMETRY_DISABLED = "1"
-  # Skip Prisma during SSG to prevent errors
   SKIP_PRISMA_GENERATE = "true"
 
 [functions]
   node_bundler = "esbuild"
   included_files = ["node_modules/.prisma/**", "prisma/**"]
-
-# Essential plugin for Next.js on Netlify
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
 
 [context.production.environment]
   NEXT_PUBLIC_API_URL = "/api"
