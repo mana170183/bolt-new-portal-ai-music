@@ -1,6 +1,6 @@
 [build]
-  command = "npm run prisma:generate && next build"
-  publish = "out"
+  command = "npm run netlify:build"
+  publish = ".next"
 
 [build.environment]
   NEXT_PUBLIC_API_URL = "/api"

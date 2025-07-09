@@ -9,6 +9,7 @@
     "prisma:generate": "prisma generate",
     "netlify": "netlify dev",
     "netlify:deploy": "netlify deploy --prod",
+    "netlify:build": "bash ./scripts/netlify-build.sh",
     "start": "next start",
     "preview": "next start",
     "lint": "next lint",
