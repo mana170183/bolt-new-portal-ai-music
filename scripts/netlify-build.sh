@@ -12,8 +12,7 @@ export SKIP_DB_OPERATIONS=true
 export NEXT_TELEMETRY_DISABLED=1
 
 # Build Next.js app as static site to avoid Prisma SSG issues
-echo "Building Next.js app..."
+echo "Building Next.js app with output:export..."
 next build
-next export
 
 echo "Build completed successfully!"
