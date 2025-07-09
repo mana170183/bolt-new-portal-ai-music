@@ -2,6 +2,11 @@
 
 echo "Starting Netlify Vite build process..."
 
+# Ensure we're using Vite, not Next.js
+echo "Setting environment to skip Next.js detection..."
+export NETLIFY_NEXT_PLUGIN_SKIP=true
+export NETLIFY_USE_NEXTJS=false
+
 # Generate Prisma client
 echo "Generating Prisma client..."
 npx prisma generate
@@ -10,10 +15,10 @@ npx prisma generate
 echo "Building with Vite..."
 npm run legacy:build
 
-# Create Netlify redirects file if it doesn't exist in dist
-if [ ! -f "dist/_redirects" ]; then
-  echo "Creating _redirects file in dist directory..."
-  cp public/_redirects dist/ || echo "# Map API routes to Netlify Functions
+# Create Netlify redirects file
+echo "Creating _redirects file in dist directory..."
+cat > dist/_redirects << EOL
+# Map API routes to Netlify Functions
 /api/health                /.netlify/functions/health                200
 /api/genres                /.netlify/functions/genres                200
 /api/moods                 /.netlify/functions/moods                 200
@@ -26,7 +31,24 @@ if [ ! -f "dist/_redirects" ]; then
 /api/generate-enhanced-music /.netlify/functions/generate-enhanced-music 200
 
 # SPA Routing - serve index.html for all routes
-/*                         /index.html                               200" > dist/_redirects
+/*                         /index.html                               200
+EOL
+
+# Create a Netlify config file in the dist folder
+echo "Creating netlify.json in dist directory..."
+cat > dist/netlify.json << EOL
+{
+  "plugins": [],
+  "build": {
+    "framework": "#vite"
+  }
+}
+EOL
+
+# Create an empty next.config.js.bak to avoid detection
+echo "Renaming next.config.js to next.config.js.bak if it exists..."
+if [ -f "next.config.js" ]; then
+  mv next.config.js next.config.js.bak
 fi
 
 echo "Build complete!"

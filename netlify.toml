@@ -1,15 +1,15 @@
 [build]
-  # Use Vite build for legacy React app
+  # Use Vite build for React app (no Next.js)
   command = "npm run netlify:vite-build"
   publish = "dist"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':!next.config.js' ':!.next/'"
 
 [build.environment]
-  NEXT_PUBLIC_API_URL = "/api"
   NODE_ENV = "production"
+  NEXT_PUBLIC_API_URL = "/api"
+  # Explicitly tell Netlify this is NOT a Next.js project
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
-  NETLIFY_USE_NEXT_PLUGIN = "false"
-  NPM_FLAGS = "--legacy-peer-deps"
-  NEXT_PUBLIC_DEPLOYMENT_ENV = "netlify"
+  NETLIFY_USE_NEXTJS = "false"
 
 [functions]
   node_bundler = "esbuild"
@@ -17,9 +17,23 @@
 
 [context.production.environment]
   NEXT_PUBLIC_API_URL = "/api"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NETLIFY_USE_NEXTJS = "false"
 
 [context.deploy-preview.environment]
   NEXT_PUBLIC_API_URL = "/api"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NETLIFY_USE_NEXTJS = "false"
 
 [context.branch-deploy.environment]
   NEXT_PUBLIC_API_URL = "/api"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NETLIFY_USE_NEXTJS = "false"
+
+# Explicitly disable all plugins
+[[plugins]]
+  package = ""
+
+# Force Vite detection
+[dev]
+  framework = "#vite"
