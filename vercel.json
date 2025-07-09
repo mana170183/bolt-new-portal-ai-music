@@ -3,10 +3,6 @@
   "buildCommand": "npm run vercel-build",
   "installCommand": "npm install",
   "regions": ["iad1"],
-  "github": {
-    "enabled": true,
-    "silent": false
-  },
   "functions": {
     "src/app/api/**/*.ts": {
       "memory": 1024,

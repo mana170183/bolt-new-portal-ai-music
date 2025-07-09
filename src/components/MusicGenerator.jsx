@@ -111,7 +111,13 @@ const MusicGenerator = () => {
       console.error('Initialization error:', error)
       const errorStatus = error?.response?.status;
       const errorMessage = error?.response?.data?.message || error?.message || 'Unknown error';
-      setError(`Failed to initialize: Request failed with status code ${errorStatus || 'unknown'} (${errorMessage}). Please ensure the backend server is running and refresh the page.`)
+      
+      // Handle Vercel authentication specifically
+      if (errorStatus === 405 || errorStatus === 401 || errorStatus === 403) {
+        setError(`Authentication required. Please refresh the page and complete Vercel authentication. (Error ${errorStatus || 'unknown'})`);
+      } else {
+        setError(`Failed to initialize: Request failed with status code ${errorStatus || 'unknown'} (${errorMessage}). Please ensure the backend server is running and refresh the page.`);
+      }
     }
   }
 
