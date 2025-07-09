@@ -16,6 +16,9 @@ import {
 } from 'lucide-react'
 import { musicAPI, metadataAPI, authAPI, healthAPI } from '../services/api'
 
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'
+
 const MusicGenerator = () => {
   const [prompt, setPrompt] = useState('')
   const [duration, setDuration] = useState(30)
@@ -128,17 +131,33 @@ const MusicGenerator = () => {
         mood
       })
 
-      if (result.status === 'success') {
-        setGeneratedTrack(result.track)
-        setSuccess('Music generated successfully!')
+      if (result.success === true) {
+        // Create track object from backend response
+        const track = {
+          id: result.metadata?.filename?.replace('.wav', '') || 'track_' + Date.now(),
+          url: result.download_url,
+          download_url: result.download_url,
+          title: result.metadata?.prompt || prompt,
+          duration: result.metadata?.duration || duration,
+          genre: result.metadata?.genre || genre,
+          mood: result.metadata?.mood || mood,
+          filename: result.audio_file || result.metadata?.filename
+        }
+        
+        setGeneratedTrack(track)
+        setSuccess(result.message || 'Music generated successfully!')
         
         // Update quota
-        const updatedQuota = await musicAPI.getUserQuota()
-        if (updatedQuota.status === 'success') {
-          setUserQuota(updatedQuota.quota)
+        try {
+          const updatedQuota = await musicAPI.getUserQuota()
+          if (updatedQuota.success === true) {
+            setUserQuota(updatedQuota.quota)
+          }
+        } catch (quotaError) {
+          console.warn('Failed to update quota:', quotaError)
         }
       } else {
-        setError(result.message || 'Failed to generate music')
+        setError(result.message || result.error || 'Failed to generate music')
       }
     } catch (error) {
       console.error('Generation error:', error)
@@ -177,7 +196,7 @@ const MusicGenerator = () => {
             // Build full URL if the track URL is relative
             const audioUrl = generatedTrack.url.startsWith('http') 
               ? generatedTrack.url 
-              : `http://localhost:5002${generatedTrack.url}`;
+              : `${API_BASE_URL}${generatedTrack.url}`;
             console.log('Full audio URL:', audioUrl);
             audioRef.current.src = audioUrl;
             // Wait for the audio to load
@@ -247,7 +266,7 @@ const MusicGenerator = () => {
       // Build full URL if the download URL is relative
       const downloadUrl = generatedTrack.download_url.startsWith('http') 
         ? generatedTrack.download_url 
-        : `http://localhost:5002${generatedTrack.download_url}`;
+        : `${API_BASE_URL}${generatedTrack.download_url}`;
       window.open(downloadUrl, '_blank');
     }
   }
