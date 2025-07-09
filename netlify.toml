@@ -1,6 +1,6 @@
 [build]
   command = "npm run prisma:generate && next build"
-  publish = ".next"
+  publish = "out"
 
 [build.environment]
   NEXT_PUBLIC_API_URL = "/api"

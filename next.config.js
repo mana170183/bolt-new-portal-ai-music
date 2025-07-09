@@ -5,7 +5,7 @@ const nextConfig = {
   },
   skipTrailingSlashRedirect: true,
   skipMiddlewareUrlNormalize: true,
-  output: 'standalone',
+  output: 'export', // Use export output to completely bypass SSG with Prisma issues
   images: {
     domains: ['images.unsplash.com'],
     unoptimized: true,
