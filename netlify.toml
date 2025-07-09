@@ -20,12 +20,3 @@
 
 [context.branch-deploy.environment]
   NEXT_PUBLIC_API_URL = "/api"
-
-[context.production.environment]
-  NEXT_PUBLIC_API_URL = "/api"
-
-[context.deploy-preview.environment]
-  NEXT_PUBLIC_API_URL = "/api"
-
-[context.branch-deploy.environment]
-  NEXT_PUBLIC_API_URL = "/api"
