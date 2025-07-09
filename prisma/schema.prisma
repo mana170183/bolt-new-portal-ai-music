@@ -1,0 +1,229 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("POSTGRES_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // User subscription and preferences
+  subscription   Subscription?
+  preferences    UserPreferences?
+  
+  // User's compositions and collaborations
+  compositions   Composition[]
+  collaborations Collaboration[]
+  exports        Export[]
+  feedback       Feedback[]
+  styleTransfers StyleTransfer[]
+
+  @@map("users")
+}
+
+model Subscription {
+  id        String           @id @default(cuid())
+  userId    String           @unique
+  plan      SubscriptionPlan @default(FREE)
+  status    String           @default("active")
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model UserPreferences {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  preferredGenres  String[] @default([])
+  preferredMoods   String[] @default([])
+  defaultTempo     Int      @default(120)
+  defaultKey       String   @default("C")
+  defaultDuration  Int      @default(180) // seconds
+  qualitySettings  Json     @default("{}")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Composition {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  prompt      String
+  userId      String
+  status      CompositionStatus @default(GENERATING)
+  
+  // Generation parameters
+  genre       String
+  mood        String
+  tempo       Int               @default(120)
+  key         String            @default("C")
+  duration    Int               @default(180)
+  
+  // AI generation details
+  provider    String            // "openai", "replicate", "google", "custom"
+  modelUsed   String?
+  parameters  Json              @default("{}")
+  
+  // Audio metadata
+  audioUrl    String?
+  waveformUrl String?
+  metadata    Json              @default("{}")
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  // Relations
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collaborations Collaboration[]
+  exports        Export[]
+  variants       CompositionVariant[]
+  feedback       Feedback[]
+  styleTransfers StyleTransfer[]
+
+  @@map("compositions")
+}
+
+model CompositionVariant {
+  id             String   @id @default(cuid())
+  compositionId  String
+  variantNumber  Int
+  audioUrl       String?
+  waveformUrl    String?
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  composition Composition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+
+  @@map("composition_variants")
+}
+
+model Collaboration {
+  id             String           @id @default(cuid())
+  compositionId  String
+  userId         String
+  role           CollaborationRole @default(VIEWER)
+  inviteAccepted Boolean          @default(false)
+  inviteEmail    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  composition Composition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("collaborations")
+}
+
+model Export {
+  id            String      @id @default(cuid())
+  compositionId String
+  userId        String
+  format        ExportFormat
+  quality       String      @default("standard") // standard, high, ultra
+  status        ExportStatus @default(PROCESSING)
+  downloadUrl   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  composition Composition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("exports")
+}
+
+model Feedback {
+  id            String   @id @default(cuid())
+  compositionId String
+  userId        String
+  rating        Int?     // 1-5 stars
+  comment       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  composition Composition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+}
+
+model StyleTransfer {
+  id               String   @id @default(cuid())
+  compositionId    String
+  userId           String
+  sourceAudioUrl   String?
+  resultAudioUrl   String?
+  status           StyleTransferStatus @default(PROCESSING)
+  parameters       Json     @default("{}")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  composition Composition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("style_transfers")
+}
+
+// Enums
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum CompositionStatus {
+  GENERATING
+  COMPLETED
+  FAILED
+  ARCHIVED
+}
+
+enum CollaborationRole {
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
+enum ExportFormat {
+  MP3
+  WAV
+  STEMS
+  MIDI
+  SHEET_MUSIC
+}
+
+enum ExportStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum StyleTransferStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}

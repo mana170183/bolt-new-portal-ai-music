@@ -17,7 +17,10 @@
     }
   ],
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://portal-ai-music-backend.yourdomain.com",
-    "BACKEND_URL": "https://portal-ai-music-backend.yourdomain.com"
+    "NEXT_PUBLIC_API_URL": "/api",
+    "BACKEND_URL": "https://portal-ai-music-backend.yourdomain.com",
+    "DATABASE_URL": "${DATABASE_URL}",
+    "PRISMA_DATABASE_URL": "${PRISMA_DATABASE_URL}",
+    "POSTGRES_URL": "${POSTGRES_URL}"
   }
 }
