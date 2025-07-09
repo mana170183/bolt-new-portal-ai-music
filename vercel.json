@@ -1,8 +1,9 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
   "regions": ["iad1"],
+  "public": true,
   "functions": {
     "src/app/api/**/*.ts": {
       "memory": 1024,
@@ -11,5 +12,25 @@
   },
   "env": {
     "NEXT_PUBLIC_API_URL": "/api"
-  }
+  },
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ]
 }
