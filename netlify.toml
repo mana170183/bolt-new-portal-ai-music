@@ -30,10 +30,6 @@
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
   NETLIFY_USE_NEXTJS = "false"
 
-# Explicitly disable all plugins
-[[plugins]]
-  package = ""
-
 # Force Vite detection
 [dev]
   framework = "#vite"
