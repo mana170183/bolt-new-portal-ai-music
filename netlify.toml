@@ -18,10 +18,7 @@
   included_files = ["node_modules/.prisma/**", "prisma/**"]
 
 [[plugins]]
-  package = "netlify-plugin-prisma-provider"
-  
-  [plugins.inputs]
-  script = "npx prisma generate"
+  package = "@netlify/plugin-nextjs"
 
 # Essential plugin for Next.js on Netlify
 [[plugins]]
