@@ -1,13 +1,15 @@
 import axios from 'axios';
 
-// API Configuration - Force use of /api for production
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '/api' : '/api');
+// Force API base URL to '' in production/Netlify to avoid double /api prefix
+let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
+if (typeof window !== 'undefined' && window.location.hostname.endsWith('netlify.app')) {
+  API_BASE_URL = '';
+}
 
-console.log('API Base URL:', API_BASE_URL);
-console.log('Environment variables:', {
-  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  NODE_ENV: process.env.NODE_ENV
-});
+if (typeof window !== 'undefined') {
+  // Debug log for deployed environment
+  console.log('API_BASE_URL used by frontend:', API_BASE_URL);
+}
 
 // Create axios instance with default config
 const api = axios.create({
