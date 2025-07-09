@@ -1,0 +1,32 @@
+# Enhanced Multi-Instrumental Music Generation System
+# Core Requirements
+
+# Basic dependencies
+numpy>=1.24.0
+soundfile>=0.12.0
+librosa>=0.10.0
+scipy>=1.10.0
+
+# Web framework
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# Audio processing
+pydub>=0.25.0
+
+# Optional: Advanced AI models (uncomment if using neural networks)
+# torch>=2.0.0
+# torchaudio>=2.0.0
+# transformers>=4.30.0
+
+# Optional: MusicGen (uncomment if using Facebook's MusicGen)
+# audiocraft
+
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Development dependencies (optional)
+# pytest>=7.0.0
+# black>=23.0.0
+# flake8>=6.0.0

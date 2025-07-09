@@ -1,0 +1,484 @@
+2025-07-09 00:54:17,723 - __main__ - INFO - 🚀 Starting Flask server on port 5000...
+2025-07-09 00:54:17,724 - __main__ - INFO - 📍 Health check available at: http://localhost:5000/health
+2025-07-09 00:54:17,724 - __main__ - INFO - 📡 API endpoints available at: http://localhost:5000/api/
+2025-07-09 00:54:17,724 - __main__ - INFO - 🔧 CORS enabled for multiple origins including localhost:3000 and localhost:5173
+2025-07-09 00:54:27,533 - __main__ - INFO - 🚀 Starting Flask server on port 5000...
+2025-07-09 00:54:27,533 - __main__ - INFO - 📍 Health check available at: http://localhost:5000/health
+2025-07-09 00:54:27,533 - __main__ - INFO - 📡 API endpoints available at: http://localhost:5000/api/
+2025-07-09 00:54:27,533 - __main__ - INFO - 🔧 CORS enabled for multiple origins including localhost:3000 and localhost:5173
+2025-07-09 00:54:43,049 - __main__ - INFO - 🚀 Starting Flask server on port 5001...
+2025-07-09 00:54:43,049 - __main__ - INFO - 📍 Health check available at: http://localhost:5001/health
+2025-07-09 00:54:43,049 - __main__ - INFO - 📡 API endpoints available at: http://localhost:5001/api/
+2025-07-09 00:54:43,049 - __main__ - INFO - 🔧 CORS enabled for multiple origins including localhost:3000 and localhost:5173
+2025-07-09 00:54:43,101 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.0.11:5001
+2025-07-09 00:54:43,101 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-09 00:54:43,111 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 00:54:43,524 - __main__ - INFO - 🚀 Starting Flask server on port 5001...
+2025-07-09 00:54:43,524 - __main__ - INFO - 📍 Health check available at: http://localhost:5001/health
+2025-07-09 00:54:43,524 - __main__ - INFO - 📡 API endpoints available at: http://localhost:5001/api/
+2025-07-09 00:54:43,524 - __main__ - INFO - 🔧 CORS enabled for multiple origins including localhost:3000 and localhost:5173
+2025-07-09 00:54:43,549 - werkzeug - WARNING -  * Debugger is active!
+2025-07-09 00:54:43,556 - werkzeug - INFO -  * Debugger PIN: 662-804-780
+2025-07-09 00:54:52,397 - __main__ - INFO - Request: GET http://localhost:5001/health
+2025-07-09 00:54:52,398 - __main__ - INFO - Health check requested
+2025-07-09 00:54:52,398 - __main__ - INFO - Health check response: {'status': 'healthy', 'message': 'Backend is running', 'success': True, 'port': 5001, 'timestamp': '2024-01-01T00:00:00Z'}
+2025-07-09 00:54:52,398 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:54:52] "GET /health HTTP/1.1" 200 -
+2025-07-09 00:54:59,264 - __main__ - INFO - Request: POST http://localhost:5001/api/generate
+2025-07-09 00:54:59,264 - __main__ - INFO - Request data: {'prompt': 'A cheerful pop song with piano and guitar', 'duration': 30, 'genre': 'pop', 'mood': 'cheerful'}
+2025-07-09 00:54:59,264 - __main__ - WARNING - 404 error: http://localhost:5001/api/generate
+2025-07-09 00:54:59,265 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:54:59] "[33mPOST /api/generate HTTP/1.1[0m" 404 -
+2025-07-09 00:55:04,736 - __main__ - INFO - Request: GET http://localhost:5001/api/
+2025-07-09 00:55:04,737 - __main__ - WARNING - 404 error: http://localhost:5001/api/
+2025-07-09 00:55:04,737 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:55:04] "[33mGET /api/ HTTP/1.1[0m" 404 -
+2025-07-09 00:55:19,603 - __main__ - INFO - Request: POST http://localhost:5001/api/generate-music
+2025-07-09 00:55:19,603 - __main__ - INFO - Request data: {'prompt': 'A cheerful pop song with piano and guitar', 'duration': 30, 'genre': 'pop', 'mood': 'cheerful'}
+2025-07-09 00:55:19,603 - __main__ - INFO - Generate music request received
+2025-07-09 00:55:19,603 - __main__ - INFO - Generate music params: prompt='A cheerful pop song with piano and guitar', duration=30, genre=pop, mood=cheerful
+2025-07-09 00:55:19,604 - __main__ - INFO - Generating audio...
+2025-07-09 00:55:19,755 - __main__ - INFO - Audio file saved: /Users/managobindasethi/portal-ai-music/backend/generated_audio/track_7986f6d0-0d24-4277-bbfa-2fd54bfa850b.wav
+2025-07-09 00:55:19,761 - __main__ - INFO - Generate music response: track generated successfully
+2025-07-09 00:55:19,773 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:55:19] "POST /api/generate-music HTTP/1.1" 200 -
+2025-07-09 00:56:46,836 - __main__ - INFO - Request: POST http://localhost:5001/api/generate-music
+2025-07-09 00:56:46,836 - __main__ - INFO - Request data: {'prompt': 'A relaxing jazz melody', 'duration': 15, 'genre': 'jazz', 'mood': 'relaxing'}
+2025-07-09 00:56:46,836 - __main__ - INFO - Generate music request received
+2025-07-09 00:56:46,836 - __main__ - INFO - Generate music params: prompt='A relaxing jazz melody', duration=15, genre=jazz, mood=relaxing
+2025-07-09 00:56:46,837 - __main__ - INFO - Generating audio...
+2025-07-09 00:56:46,914 - __main__ - INFO - Audio file saved: /Users/managobindasethi/portal-ai-music/backend/generated_audio/track_8f5b1392-a0dd-4383-b256-d81467cee5e1.wav
+2025-07-09 00:56:46,917 - __main__ - INFO - Generate music response: track generated successfully
+2025-07-09 00:56:46,923 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:56:46] "POST /api/generate-music HTTP/1.1" 200 -
+2025-07-09 00:57:04,660 - __main__ - INFO - Request: OPTIONS http://localhost:5001/health
+2025-07-09 00:57:04,674 - __main__ - INFO - Request: OPTIONS http://localhost:5001/health
+2025-07-09 00:57:04,674 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:57:04] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 00:57:04,676 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:57:04] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 00:57:26,828 - __main__ - INFO - Request: GET http://localhost:5001/health
+2025-07-09 00:57:26,828 - __main__ - INFO - Health check requested
+2025-07-09 00:57:26,828 - __main__ - INFO - Health check response: {'status': 'healthy', 'message': 'Backend is running', 'success': True, 'port': 5001, 'timestamp': '2024-01-01T00:00:00Z'}
+2025-07-09 00:57:26,829 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:57:26] "GET /health HTTP/1.1" 200 -
+2025-07-09 00:57:33,399 - __main__ - INFO - Request: GET http://localhost:5001/health
+2025-07-09 00:57:33,401 - __main__ - INFO - Health check requested
+2025-07-09 00:57:33,401 - __main__ - INFO - Health check response: {'status': 'healthy', 'message': 'Backend is running', 'success': True, 'port': 5001, 'timestamp': '2024-01-01T00:00:00Z'}
+2025-07-09 00:57:33,402 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:57:33] "GET /health HTTP/1.1" 200 -
+2025-07-09 00:57:33,405 - __main__ - INFO - Request: GET http://localhost:5001/health
+2025-07-09 00:57:33,406 - __main__ - INFO - Health check requested
+2025-07-09 00:57:33,406 - __main__ - INFO - Health check response: {'status': 'healthy', 'message': 'Backend is running', 'success': True, 'port': 5001, 'timestamp': '2024-01-01T00:00:00Z'}
+2025-07-09 00:57:33,407 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:57:33] "GET /health HTTP/1.1" 200 -
+2025-07-09 00:57:33,410 - __main__ - INFO - Request: GET http://localhost:5001/health
+2025-07-09 00:57:33,410 - __main__ - INFO - Health check requested
+2025-07-09 00:57:33,410 - __main__ - INFO - Health check response: {'status': 'healthy', 'message': 'Backend is running', 'success': True, 'port': 5001, 'timestamp': '2024-01-01T00:00:00Z'}
+2025-07-09 00:57:33,410 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 00:57:33] "GET /health HTTP/1.1" 200 -
+2025-07-09 00:59:07,832 - werkzeug - INFO -  * Detected change in '/Users/managobindasethi/portal-ai-music/backend/app.py', reloading
+2025-07-09 00:59:07,933 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 01:00:32,148 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 01:02:01,709 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 07:37:02,398 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 07:44:01,801 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 10:21:56,825 - enhanced_main_generator - INFO - Enhanced Music Generator initialized with 16 instruments
+2025-07-09 10:23:45,069 - enhanced_main_generator - INFO - Enhanced Music Generator initialized with 16 instruments
+2025-07-09 10:24:57,802 - enhanced_main_generator - INFO - Enhanced Music Generator initialized with 16 instruments
+2025-07-09 10:26:50,509 - enhanced_main_generator - INFO - Enhanced Music Generator initialized with 16 instruments
+2025-07-09 10:26:50,561 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5002
+ * Running on http://192.168.0.11:5002
+2025-07-09 10:26:50,561 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-07-09 10:26:50,562 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 10:26:51,228 - enhanced_main_generator - INFO - Enhanced Music Generator initialized with 16 instruments
+2025-07-09 10:26:51,251 - werkzeug - WARNING -  * Debugger is active!
+2025-07-09 10:26:51,262 - werkzeug - INFO -  * Debugger PIN: 662-804-780
+2025-07-09 10:27:03,728 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:27:03] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:27:21,956 - werkzeug - INFO -  * Detected change in '/Users/managobindasethi/portal-ai-music/backend/start.py', reloading
+2025-07-09 10:27:22,023 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 10:27:22,668 - enhanced_main_generator - INFO - Enhanced Music Generator initialized with 16 instruments
+2025-07-09 10:27:22,697 - werkzeug - WARNING -  * Debugger is active!
+2025-07-09 10:27:22,707 - werkzeug - INFO -  * Debugger PIN: 662-804-780
+2025-07-09 10:27:23,390 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:27:23] "[31m[1mGET /api/auth/token HTTP/1.1[0m" 405 -
+2025-07-09 10:27:29,557 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:27:29] "[31m[1mGET /api/auth/token HTTP/1.1[0m" 405 -
+2025-07-09 10:27:35,725 - __main__ - ERROR - Token generation error: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.
+2025-07-09 10:27:35,726 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:27:35] "[35m[1mPOST /api/auth/token HTTP/1.1[0m" 500 -
+2025-07-09 10:27:46,956 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:27:46] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:28:05,811 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:05] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 10:28:24,906 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:28:24,907 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:28:24,909 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:28:24,909 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:28:24,913 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:28:24,913 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:28:24,914 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:28:24,915 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:28:24,915 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:28:24,916 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:28:24,916 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:28:24,917 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:28:24,918 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:28:24,919 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:28:24,919 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:28:24,920 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:28:24] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:30:15,047 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:30:15,049 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:30:15,054 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:30:15,056 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:30:15,059 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:30:15,060 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:30:15,061 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:30:15,062 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:30:15,062 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:30:15,063 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:30:15,063 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:30:15,064 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:30:15,065 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:30:15,066 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:30:15,067 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:30:15,068 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:15] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:30:39,391 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:39] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:30:50,193 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:50] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:30:59,250 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:30:59] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:31:42,728 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:31:42] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:33:06,896 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:33:06,897 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:33:06,898 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:33:06,900 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:33:06,902 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:33:06,904 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:33:06,905 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:33:06,906 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:33:06,906 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:33:06,907 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:33:06,908 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:33:06,909 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:33:06,909 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:33:06,910 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:33:06,911 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:33:06,913 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:33:06] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:41:10,290 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:41:10] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:41:10,348 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:41:10] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:41:10,409 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:41:10] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 10:41:10,465 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:41:10] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:49:01,294 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:01,295 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:01,298 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:01,301 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:01,303 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:01,304 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:01,309 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:01,313 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:01,314 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:01,315 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:01,317 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:01,320 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:01,321 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:01,323 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:01,325 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:01,337 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:01] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:03,320 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:03,322 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:03,323 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:03,324 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:03,327 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:03,327 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:03,327 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:03,328 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:03,328 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:03,329 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:03,330 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:03,331 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:03,331 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:03,335 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:03,335 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:03,336 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:03] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:05,515 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:05] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 10:49:05,517 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:05] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:49:05,519 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:05] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:05,520 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:05] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:05,521 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:05] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 10:49:05,523 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:05] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:49:05,524 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:05] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:05,525 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:05] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:15,275 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:15,278 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:15,281 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:15,297 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:15,300 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:15,303 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:15,308 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:15,311 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:15,315 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:15,317 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:15,318 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:15,319 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:15,322 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:15,323 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:15,326 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:15] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:47,502 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:47,503 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:47,505 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:47,511 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:47,512 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:47,520 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:47,523 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:47,526 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:47,527 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:47,528 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:47,529 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:47,530 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:47,532 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:47,534 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:47,536 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:47] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:53,918 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:53,918 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:49:53,929 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:53,958 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:49:53,960 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:53,963 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:53,967 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:53,971 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:53,972 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:53,972 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:53,974 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:53,975 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:53] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:49:54,021 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:54] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:49:54,024 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:54] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:49:54,025 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:49:54] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:51:52,353 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:51:52,355 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:51:52,358 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:51:52,360 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:51:52,364 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:51:52,365 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:51:52,366 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:51:52,367 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:51:52,368 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:51:52,369 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:51:52,370 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:51:52,370 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:51:52,371 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:51:52,373 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:51:52,374 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:51:52,376 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:52] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:51:58,397 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:51:58,398 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:51:58,407 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:51:58,410 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:51:58,413 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:51:58,414 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:51:58,415 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:51:58,416 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:51:58,417 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:51:58,417 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:51:58,418 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:51:58,419 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:51:58,420 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:51:58,422 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:51:58,423 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:51:58] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:52:08,674 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:08] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 10:52:08,676 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:08] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:52:08,678 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:08] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:52:08,681 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:08] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:52:08,683 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:08] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 10:52:08,693 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:08] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 10:52:08,696 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:08] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:52:08,698 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:08] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:52:13,693 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:52:13] "[33mOPTIONS /api/generate-enhanced-music HTTP/1.1[0m" 404 -
+2025-07-09 10:55:54,712 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:55:54,712 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:55:54,716 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:55:54,717 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:55:54,719 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:55:54,721 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:55:54,722 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:55:54,724 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:55:54,726 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:55:54,727 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:55:54,728 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:55:54,728 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:55:54,729 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:55:54,731 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:55:54,734 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:55:54] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:56:02,954 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:56:02,959 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:56:02,964 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:56:02,968 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:56:02,970 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:56:02,971 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:56:02,972 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:56:02,972 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:56:02,973 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:56:02,974 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:56:02,976 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:56:02,978 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:56:02,979 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:56:02,979 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:56:02,981 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:56:02,983 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:56:02] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:57:45,158 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:57:45,161 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:57:45,164 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:57:45,167 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:57:45,176 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:57:45,179 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:57:45,180 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:57:45,181 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:57:45,184 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:57:45,185 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:57:45,187 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:57:45,188 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:57:45,189 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:57:45,190 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:57:45,191 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:57:45,192 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:57:45] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:59:55,278 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:59:55,280 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 10:59:55,282 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:59:55,284 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:59:55,288 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:59:55,290 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:59:55,292 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:59:55,299 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 10:59:55,303 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 10:59:55,304 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:59:55,306 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:59:55,308 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:59:55,309 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:59:55,311 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:59:55,313 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:59:55,315 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:55] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:59:58,814 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:58] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:59:58,820 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:58] "GET /health HTTP/1.1" 200 -
+2025-07-09 10:59:58,829 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:58] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:59:58,831 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:58] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 10:59:58,832 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:58] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:59:58,833 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:58] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 10:59:58,836 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:58] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 10:59:58,836 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 10:59:58] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:01:01,289 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:01] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 11:01:01,291 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:01] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 11:01:02,254 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:01:02,286 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:01:02,296 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 11:01:02,330 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 11:01:02,334 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:01:02,337 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:01:02,349 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:01:02,352 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 11:01:02,389 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:01:02,392 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:01:02,397 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:01:02,419 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:01:02,430 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:01:02,668 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:01:02,689 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:01:02,697 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:01:02,772 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:01:02,773 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:01:02,785 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:01:02] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:02:17,445 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 11:02:17,447 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 11:02:17,450 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:02:17,453 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:02:17,458 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 11:02:17,462 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 11:02:17,463 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:02:17,464 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 11:02:17,466 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 11:02:17,467 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:02:17,469 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:02:17,469 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:02:17,469 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:02:17,472 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:02:17,474 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:02:17,475 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:17] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:02:18,528 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "OPTIONS /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:02:18,529 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "OPTIONS /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:02:18,530 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:02:18,533 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:02:18,537 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "OPTIONS /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:02:18,537 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "OPTIONS /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:02:18,539 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:02:18,541 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:02:18,543 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:02:18,545 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:02:18,546 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:02:18,547 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:02:18,547 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:02:18,549 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:02:18] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:04:09,055 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 11:04:09,057 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 11:04:09,060 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:04:09,061 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:04:09,063 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 11:04:09,064 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 11:04:09,065 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:04:09,066 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:04:09,066 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 11:04:09,068 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:04:09,068 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:04:09,069 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:04:09,070 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:04:09,070 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:04:09,071 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:09] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:04:11,148 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "OPTIONS /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:04:11,149 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "OPTIONS /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:04:11,152 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:04:11,159 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:04:11,162 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "OPTIONS /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:04:11,164 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "OPTIONS /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:04:11,166 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:04:11,169 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:04:11,171 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:04:11,173 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:04:11,174 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:04:11,177 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:04:11,178 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:04:11,179 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:11] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:04:16,357 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:04:16] "[33mOPTIONS /api/generate-enhanced-music HTTP/1.1[0m" 404 -
+2025-07-09 11:05:18,798 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 11:05:18,800 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "OPTIONS /health HTTP/1.1" 200 -
+2025-07-09 11:05:18,804 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:05:18,808 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:05:18,811 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 11:05:18,812 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 11:05:18,813 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:05:18,814 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "OPTIONS /api/genres HTTP/1.1" 200 -
+2025-07-09 11:05:18,815 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "OPTIONS /api/moods HTTP/1.1" 200 -
+2025-07-09 11:05:18,816 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "OPTIONS /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:05:18,819 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:05:18,822 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:05:18,823 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:05:18,826 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:05:18,832 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:05:18,833 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:18] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:05:19,156 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:19] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:05:19,160 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:19] "GET /health HTTP/1.1" 200 -
+2025-07-09 11:05:19,169 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:19] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:05:19,178 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:19] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:05:19,183 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:19] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:05:19,184 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:19] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:05:19,188 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:19] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:05:19,195 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:19] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:05:20,105 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "OPTIONS /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:05:20,108 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "OPTIONS /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:05:20,131 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:05:20,142 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/instruments HTTP/1.1" 200 -
+2025-07-09 11:05:20,143 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "OPTIONS /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:05:20,148 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:05:20,150 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/composition-templates HTTP/1.1" 200 -
+2025-07-09 11:05:20,152 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:05:20,154 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/genres HTTP/1.1" 200 -
+2025-07-09 11:05:20,155 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:05:20,157 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/moods HTTP/1.1" 200 -
+2025-07-09 11:05:20,158 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:05:20,160 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:20] "GET /api/user/quota HTTP/1.1" 200 -
+2025-07-09 11:05:27,247 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:05:27] "[33mOPTIONS /api/generate-enhanced-music HTTP/1.1[0m" 404 -
+2025-07-09 11:06:38,057 - werkzeug - INFO - 127.0.0.1 - - [09/Jul/2025 11:06:38] "[33mPOST /api/generate-enhanced-music HTTP/1.1[0m" 404 -
+2025-07-09 11:12:16,867 - werkzeug - INFO -  * Detected change in '/Users/managobindasethi/portal-ai-music/backend/app.py', reloading
+2025-07-09 11:12:17,158 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 11:12:18,212 - enhanced_main_generator - INFO - Enhanced Music Generator initialized with 16 instruments
+2025-07-09 11:12:18,241 - werkzeug - WARNING -  * Debugger is active!
+2025-07-09 11:12:18,250 - werkzeug - INFO -  * Debugger PIN: 662-804-780
+2025-07-09 11:12:34,215 - werkzeug - INFO -  * Detected change in '/Users/managobindasethi/portal-ai-music/backend/app.py', reloading
+2025-07-09 11:12:34,293 - werkzeug - INFO -  * Restarting with stat
+2025-07-09 11:12:34,988 - enhanced_main_generator - INFO - Enhanced Music Generator initialized with 16 instruments
+2025-07-09 11:12:35,016 - werkzeug - WARNING -  * Debugger is active!
+2025-07-09 11:12:35,022 - werkzeug - INFO -  * Debugger PIN: 662-804-780

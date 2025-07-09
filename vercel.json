@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "name": "portal-ai-music",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next",
+      "config": {
+        "outputDirectory": ".next"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/legacy/(.*)",
+      "dest": "http://localhost:5000/api/$1",
+      "status": 307
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database-url",
+    "DIRECT_URL": "@direct-url",
+    "CLERK_PUBLISHABLE_KEY": "@clerk-publishable-key",
+    "CLERK_SECRET_KEY": "@clerk-secret-key",
+    "OPENAI_API_KEY": "@openai-api-key",
+    "REPLICATE_API_TOKEN": "@replicate-api-token",
+    "BLOB_READ_WRITE_TOKEN": "@blob-read-write-token"
+  },
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}

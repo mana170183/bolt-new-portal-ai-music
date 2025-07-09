@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Test</title>
+</head>
+<body>
+    <h1>React Loading Test</h1>
+    <div id="react-status">Checking React app...</div>
+    
+    <iframe 
+        src="http://localhost:3000/" 
+        width="100%" 
+        height="600px" 
+        style="border: 1px solid #ccc; margin-top: 20px;"
+        onload="checkIframe()"
+        onerror="iframeError()">
+    </iframe>
+    
+    <script>
+        function checkIframe() {
+            document.getElementById('react-status').innerHTML = 
+                '<p style="color: green;">✅ React app loaded in iframe!</p>';
+        }
+        
+        function iframeError() {
+            document.getElementById('react-status').innerHTML = 
+                '<p style="color: red;">❌ React app failed to load in iframe!</p>';
+        }
+        
+        // Also test direct API call
+        setTimeout(() => {
+            fetch('http://localhost:3000/')
+                .then(response => response.text())
+                .then(html => {
+                    if (html.includes('id="root"')) {
+                        document.getElementById('react-status').innerHTML += 
+                            '<p style="color: green;">✅ React HTML structure is correct!</p>';
+                    } else {
+                        document.getElementById('react-status').innerHTML += 
+                            '<p style="color: orange;">⚠️ React HTML structure seems different!</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('react-status').innerHTML += 
+                        '<p style="color: red;">❌ Could not fetch React app: ' + error.message + '</p>';
+                });
+        }, 1000);
+    </script>
+</body>
+</html>
