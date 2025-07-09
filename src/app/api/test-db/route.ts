@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma-dynamic';
 
 export async function GET() {
   try {
-    // Try to perform a simple operation to test connection
+    // Get Prisma client dynamically and try to perform a simple operation
+    const prisma = await getPrisma();
     const count = await prisma.user.count();
     
     return NextResponse.json(

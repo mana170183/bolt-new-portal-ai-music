@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma-dynamic';
 
 export async function GET() {
   try {
+    // Get Prisma client dynamically
+    const prisma = await getPrisma();
+    
     // Get all users (limited to 10 for safety)
     const users = await prisma.user.findMany({
       take: 10,
@@ -34,6 +37,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const prisma = await getPrisma();
     const body = await request.json();
     const { clerkId, email, firstName, lastName, imageUrl } = body;
     
