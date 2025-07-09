@@ -1,5 +1,5 @@
 [build]
-  command = "SKIP_DATABASE_SETUP=true npm run build"
+  command = "npx prisma generate && npm run build"
   publish = ".next"
 
 [build.environment]
