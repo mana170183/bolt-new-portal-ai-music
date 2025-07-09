@@ -76,7 +76,7 @@ def check_flask_app():
         logger.error(f"✗ Error in Flask app: {e}")
         return None
 
-def check_port_availability(port=5000):
+def check_port_availability(port=5002):
     """Check if the specified port is available."""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -88,7 +88,7 @@ def check_port_availability(port=5000):
         logger.info(f"  Please stop the application using port {port} or change the PORT in .env")
         return False
 
-def wait_for_server(port=5000, timeout=30):
+def wait_for_server(port=5002, timeout=30):
     """Wait for the server to start responding."""
     logger.info(f"⏳ Waiting for server to start on port {port}...")
     start_time = time.time()
@@ -111,7 +111,7 @@ def wait_for_server(port=5000, timeout=30):
 def start_server():
     """Start the Flask development server."""
     try:
-        port = int(os.environ.get('PORT', 5000))
+        port = int(os.environ.get('PORT', 5002))
         
         # Check if port is available
         if not check_port_availability(port):
@@ -132,7 +132,7 @@ def start_server():
         if app is None:
             return False
             
-        app.run(host='0.0.0.0', port=port, debug=True)
+        app.run(host='0.0.0.0', port=port, debug=False)
         return True
         
     except KeyboardInterrupt:

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -13,7 +13,10 @@ const api = axios.create({
 });
 
 // Token management
-let authToken = localStorage.getItem('auth_token');
+let authToken = null;
+if (typeof window !== 'undefined') {
+  authToken = localStorage.getItem('auth_token');
+}
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
@@ -93,6 +96,18 @@ export const musicAPI = {
     }
   },
 
+  async generateEnhancedMusic(options = {}) {
+    try {
+      const response = await api.post('/api/generate-enhanced-music', options);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+      throw error;
+    }
+  },
+
   async getUserTracks() {
     try {
       const response = await api.get('/api/tracks');
@@ -132,6 +147,26 @@ export const metadataAPI = {
       return response.data;
     } catch (error) {
       console.error('Error fetching moods:', error);
+      throw error;
+    }
+  },
+
+  async getInstruments() {
+    try {
+      const response = await api.get('/api/instruments');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching instruments:', error);
+      throw error;
+    }
+  },
+
+  async getCompositionTemplates() {
+    try {
+      const response = await api.get('/api/composition-templates');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching composition templates:', error);
       throw error;
     }
   }

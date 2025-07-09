@@ -1,26 +1,57 @@
 {
   "name": "portal-ai-music",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "preview": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "legacy:dev": "vite",
+    "legacy:build": "vite build"
   },
   "dependencies": {
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.5.4",
+    "@prisma/client": "^5.15.0",
+    "prisma": "^5.15.0",
+    "@clerk/nextjs": "^5.2.0",
+    "@vercel/blob": "^0.23.4",
+    "framer-motion": "^11.3.2",
+    "zustand": "^4.5.4",
+    "react-hook-form": "^7.52.1",
+    "zod": "^3.23.8",
+    "@hookform/resolvers": "^3.8.0",
+    "tone": "^14.7.77",
+    "socket.io-client": "^4.7.5",
+    "@ai-sdk/openai": "^0.0.34",
+    "ai": "^3.2.25",
     "axios": "^1.10.0",
     "lucide-react": "^0.294.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "sonner": "^1.5.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.4.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.5",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.6",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.13",
     "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32",
-    "tailwindcss": "^3.3.6",
-    "vite": "^5.0.8"
+    "vite": "^7.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
