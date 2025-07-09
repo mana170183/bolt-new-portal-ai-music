@@ -4,7 +4,7 @@
 generator client {
   provider = "prisma-client-js"
   // These settings help with serverless deployments like Netlify
-  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "debian-openssl-1.1.x"]
 }
 
 datasource db {
