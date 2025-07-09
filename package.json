@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "netlify-build": "npx prisma generate && next build",
     "vercel-build": "node scripts/github-vercel-build.js",
     "start": "next start",
     "preview": "next start",
