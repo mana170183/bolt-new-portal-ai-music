@@ -17,9 +17,6 @@
   node_bundler = "esbuild"
   included_files = ["node_modules/.prisma/**", "prisma/**"]
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
 # Essential plugin for Next.js on Netlify
 [[plugins]]
   package = "@netlify/plugin-nextjs"
