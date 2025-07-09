@@ -61,3 +61,6 @@ test_*.html
 test_*.py
 simple_mode_test.html
 .vercel
+
+# Local Netlify folder
+.netlify

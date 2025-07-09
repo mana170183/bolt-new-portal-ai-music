@@ -5,22 +5,21 @@
 [build.environment]
   NEXT_PUBLIC_API_URL = "/api"
   NODE_ENV = "production"
-
-# Next.js API routes will be converted to Netlify Functions
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-# Handle Next.js routes
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  NETLIFY_NEXT_PLUGIN_SKIP = "false"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 # Essential plugin for Next.js on Netlify
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[context.production.environment]
+  NEXT_PUBLIC_API_URL = "/api"
+
+[context.deploy-preview.environment]
+  NEXT_PUBLIC_API_URL = "/api"
+
+[context.branch-deploy.environment]
+  NEXT_PUBLIC_API_URL = "/api"
 
 [context.production.environment]
   NEXT_PUBLIC_API_URL = "/api"

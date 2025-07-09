@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  target: 'serverless',
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },
   images: {
-    domains: ['images.unsplash.com', 'blob.vercel-storage.com'],
+    domains: ['images.unsplash.com'],
+    unoptimized: true,
   },
   // Support for audio files
   webpack: (config) => {
@@ -25,15 +27,8 @@ const nextConfig = {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
-  // API configuration
-  async rewrites() {
-    return [
-      {
-        source: '/api/legacy/:path*',
-        destination: 'http://localhost:5000/api/:path*',
-      },
-    ];
-  },
+  // Remove rewrites that conflict with Netlify
+  trailingSlash: false,
 };
 
 export default nextConfig;
