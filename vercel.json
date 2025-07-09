@@ -24,7 +24,9 @@
     "CLERK_SECRET_KEY": "@clerk-secret-key",
     "OPENAI_API_KEY": "@openai-api-key",
     "REPLICATE_API_TOKEN": "@replicate-api-token",
-    "BLOB_READ_WRITE_TOKEN": "@blob-read-write-token"
+    "BLOB_READ_WRITE_TOKEN": "@blob-read-write-token",
+    "NEXT_PUBLIC_API_URL": "@next-public-api-url",
+    "BACKEND_URL": "@backend-url"
   },
   "functions": {
     "src/app/api/**/*.ts": {
