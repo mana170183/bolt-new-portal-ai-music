@@ -131,6 +131,8 @@ const MusicGenerator = () => {
         mood
       })
 
+      console.log('Music generation result:', result)
+
       if (result.success === true) {
         // Create track object from backend response
         const track = {
@@ -144,6 +146,7 @@ const MusicGenerator = () => {
           filename: result.audio_file || result.metadata?.filename
         }
         
+        console.log('Created track object:', track)
         setGeneratedTrack(track)
         setSuccess(result.message || 'Music generated successfully!')
         
@@ -157,6 +160,7 @@ const MusicGenerator = () => {
           console.warn('Failed to update quota:', quotaError)
         }
       } else {
+        console.error('Music generation failed:', result)
         setError(result.message || result.error || 'Failed to generate music')
       }
     } catch (error) {
