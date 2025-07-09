@@ -10,6 +10,7 @@
     "netlify": "netlify dev",
     "netlify:deploy": "netlify deploy --prod",
     "netlify:build": "bash ./scripts/netlify-build.sh",
+    "netlify:vite-build": "bash ./scripts/netlify-vite-build.sh",
     "start": "next start",
     "preview": "next start",
     "lint": "next lint",

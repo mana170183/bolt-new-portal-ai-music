@@ -1,6 +1,7 @@
 [build]
-  command = "npm run netlify:build"
-  publish = ".next"
+  # Use Vite build for legacy React app
+  command = "npm run netlify:vite-build"
+  publish = "dist"
 
 [build.environment]
   NEXT_PUBLIC_API_URL = "/api"
@@ -9,9 +10,6 @@
   NETLIFY_USE_NEXT_PLUGIN = "false"
   NPM_FLAGS = "--legacy-peer-deps"
   NEXT_PUBLIC_DEPLOYMENT_ENV = "netlify"
-  NEXT_DISABLE_SOURCEMAPS = "1"
-  NEXT_TELEMETRY_DISABLED = "1"
-  SKIP_PRISMA_GENERATE = "true"
 
 [functions]
   node_bundler = "esbuild"
