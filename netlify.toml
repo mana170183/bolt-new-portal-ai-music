@@ -18,9 +18,6 @@
   included_files = ["node_modules/.prisma/**", "prisma/**"]
 
 [[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-[[plugins]]
   package = "netlify-plugin-prisma-provider"
   
   [plugins.inputs]
