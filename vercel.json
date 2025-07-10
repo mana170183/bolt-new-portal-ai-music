@@ -3,24 +3,25 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/next",
+      "use": "@vercel/static-build",
       "config": {
-        "outputDirectory": ".next"
+        "outputDirectory": "dist"
       }
     }
   ],
   "routes": [
     {
-      "src": "/api/legacy/(.*)",
-      "dest": "${BACKEND_URL}/api/$1",
-      "status": 307
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "env": {
-    "NEXT_PUBLIC_API_URL": "/api",
-    "BACKEND_URL": "https://portal-ai-music-backend.yourdomain.com",
-    "DATABASE_URL": "${DATABASE_URL}",
-    "PRISMA_DATABASE_URL": "${PRISMA_DATABASE_URL}",
-    "POSTGRES_URL": "${POSTGRES_URL}"
+    "REACT_APP_API_URL": "@api-url",
+    "REACT_APP_SUPABASE_URL": "@supabase-url",
+    "REACT_APP_SUPABASE_ANON_KEY": "@supabase-anon-key"
   }
 }
