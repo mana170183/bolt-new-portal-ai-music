@@ -377,3 +377,98 @@ variable "enable_debug_mode" {
   type        = bool
   default     = false
 }
+
+# Cost Optimization Variables
+variable "sql_sku_name" {
+  description = "SQL Database SKU name"
+  type        = string
+  default     = "GP_Gen5_2"
+  validation {
+    condition     = contains(["Basic", "S0", "S1", "S2", "GP_Gen5_2", "GP_Gen5_4", "BC_Gen5_2"], var.sql_sku_name)
+    error_message = "SQL SKU must be a valid Azure SQL Database SKU."
+  }
+}
+
+variable "sql_max_size_gb" {
+  description = "Maximum size of SQL Database in GB"
+  type        = number
+  default     = 32
+}
+
+variable "sql_zone_redundant" {
+  description = "Enable zone redundancy for SQL Database"
+  type        = bool
+  default     = true
+}
+
+variable "sql_geo_backup_enabled" {
+  description = "Enable geo-redundant backup for SQL Database"
+  type        = bool
+  default     = true
+}
+
+variable "container_registry_sku" {
+  description = "Container Registry SKU"
+  type        = string
+  default     = "Standard"
+  validation {
+    condition     = contains(["Basic", "Standard", "Premium"], var.container_registry_sku)
+    error_message = "Container Registry SKU must be Basic, Standard, or Premium."
+  }
+}
+
+variable "enable_auto_shutdown" {
+  description = "Enable auto-shutdown for development environments"
+  type        = bool
+  default     = false
+}
+
+variable "shutdown_schedule" {
+  description = "Auto-shutdown schedule configuration"
+  type = object({
+    weekday_shutdown_time = string
+    weekday_startup_time  = string
+    weekend_shutdown      = bool
+  })
+  default = {
+    weekday_shutdown_time = "18:00"
+    weekday_startup_time  = "08:00"
+    weekend_shutdown      = false
+  }
+}
+
+variable "monthly_budget_limit" {
+  description = "Monthly budget limit in USD"
+  type        = number
+  default     = 1000
+}
+
+variable "budget_alert_thresholds" {
+  description = "Budget alert thresholds as percentages"
+  type        = list(number)
+  default     = [50, 80, 100]
+}
+
+variable "log_retention_days" {
+  description = "Log Analytics retention in days"
+  type        = number
+  default     = 90
+}
+
+variable "metrics_retention_days" {
+  description = "Metrics retention in days"  
+  type        = number
+  default     = 30
+}
+
+variable "enable_detailed_monitoring" {
+  description = "Enable detailed monitoring (additional cost)"
+  type        = bool
+  default     = true
+}
+
+variable "additional_tags" {
+  description = "Additional tags for cost tracking"
+  type        = map(string)
+  default     = {}
+}
