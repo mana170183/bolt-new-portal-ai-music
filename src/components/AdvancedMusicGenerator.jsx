@@ -8,6 +8,24 @@ import {
 } from 'lucide-react';
 import { musicAPI, metadataAPI, authAPI } from '../services/api';
 
+// Helper function to get human-readable audio error messages
+const getAudioErrorMessage = (error) => {
+  if (!error) return 'Unknown audio error';
+  
+  switch (error.code) {
+    case error.MEDIA_ERR_ABORTED:
+      return 'Audio playback was aborted';
+    case error.MEDIA_ERR_NETWORK:
+      return 'Network error while loading audio';
+    case error.MEDIA_ERR_DECODE:
+      return 'Audio format not supported or corrupted';
+    case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+      return 'Audio format not supported by browser';
+    default:
+      return `Audio error (code: ${error.code})`;
+  }
+};
+
 const AdvancedMusicGenerator = () => {
   const [formData, setFormData] = useState({
     lyrics: '',
@@ -40,11 +58,38 @@ const AdvancedMusicGenerator = () => {
   // Instrument icons mapping
   const instrumentIcons = {
     piano: Piano,
+    "acoustic-guitar": Guitar,
+    "electric-guitar": Guitar,
+    "bass-guitar": Guitar,
     guitar: Guitar,
     bass: Guitar,
     drums: Drum,
+    percussion: Drum,
+    violin: Waves,
+    cello: Waves,
     strings: Waves,
-    synthesizer: Mic
+    synthesizer: Mic,
+    "steel-drums": Drum,
+    tabla: Drum,
+    xylophone: Drum,
+    marimba: Drum,
+    vibraphone: Drum,
+    harp: Waves,
+    banjo: Guitar,
+    mandolin: Guitar,
+    ukulele: Guitar,
+    sitar: Guitar,
+    koto: Guitar,
+    flute: Mic,
+    clarinet: Mic,
+    saxophone: Mic,
+    trumpet: Mic,
+    trombone: Mic,
+    harmonica: Mic,
+    bagpipes: Mic,
+    didgeridoo: Mic,
+    accordion: Mic,
+    organ: Piano
   };
 
   // Add complexity options
@@ -229,7 +274,13 @@ const AdvancedMusicGenerator = () => {
         setIsPlaying(true);
       }).catch(err => {
         console.error("Playback error:", err);
-        setError("Could not play audio.");
+        if (err.name === 'NotAllowedError') {
+          setError('Audio autoplay is blocked. Please try clicking play again.');
+        } else if (err.name === 'NotSupportedError') {
+          setError('Audio format not supported by your browser.');
+        } else {
+          setError(`Could not play audio: ${err.message}`);
+        }
       });
     }
   };
@@ -239,7 +290,7 @@ const AdvancedMusicGenerator = () => {
       const audio = audioRef.current;
       const audioUrl = generatedTrack.url.startsWith('http')
         ? generatedTrack.url
-        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${generatedTrack.url}`;
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${generatedTrack.url}`;
       
       audio.src = audioUrl;
       audio.load();
@@ -258,7 +309,7 @@ const AdvancedMusicGenerator = () => {
     if (generatedTrack?.download_url) {
       const downloadUrl = generatedTrack.download_url.startsWith('http')
         ? generatedTrack.download_url
-        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${generatedTrack.download_url}`;
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${generatedTrack.download_url}`;
       window.open(downloadUrl, '_blank');
     }
   };
@@ -275,7 +326,7 @@ const AdvancedMusicGenerator = () => {
   const downloadStem = (instrument, url) => {
     const downloadUrl = url.startsWith('http')
       ? url
-      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${url}`;
+      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${url}`;
     window.open(downloadUrl, '_blank');
   };
 
@@ -637,7 +688,16 @@ const AdvancedMusicGenerator = () => {
                   </button>
                 </div>
               </div>
-              <audio ref={audioRef} className="hidden" />
+              <audio 
+                ref={audioRef} 
+                className="hidden"
+                preload="metadata"
+                onError={(e) => {
+                  console.error('Audio element error:', e);
+                  const errorCode = e.target.error?.code || 'unknown';
+                  setError(`Audio playback error: ${getAudioErrorMessage(e.target.error)}`);
+                }}
+              />
 
               {/* Stems Download */}
               {generatedTrack.stem_urls && Object.keys(generatedTrack.stem_urls).length > 0 && (

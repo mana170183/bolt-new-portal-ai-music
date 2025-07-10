@@ -17,7 +17,25 @@ import {
 import { musicAPI, metadataAPI, authAPI, healthAPI } from '../services/api'
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
+// Helper function to get human-readable audio error messages
+const getAudioErrorMessage = (error) => {
+  if (!error) return 'Unknown audio error';
+  
+  switch (error.code) {
+    case error.MEDIA_ERR_ABORTED:
+      return 'Audio playback was aborted';
+    case error.MEDIA_ERR_NETWORK:
+      return 'Network error while loading audio';
+    case error.MEDIA_ERR_DECODE:
+      return 'Audio format not supported or corrupted';
+    case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+      return 'Audio format not supported by browser';
+    default:
+      return `Audio error (code: ${error.code})`;
+  }
+};
 
 const MusicGenerator = () => {
   const [prompt, setPrompt] = useState('')
@@ -179,89 +197,44 @@ const MusicGenerator = () => {
   }
 
   const togglePlayback = async () => {
-    if (audioRef.current && generatedTrack) {
-      try {
-        console.log('Toggle playback - Current state:', isPlaying)
-        console.log('Audio URL:', generatedTrack.url)
-        console.log('Audio element ready state:', audioRef.current.readyState)
-        console.log('Audio element src:', audioRef.current.src)
+    if (!audioRef.current || !generatedTrack) return;
+    
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        // Build full URL if needed
+        const audioUrl = generatedTrack.url.startsWith('http') 
+          ? generatedTrack.url 
+          : `${API_BASE_URL}${generatedTrack.url}`;
         
-        if (isPlaying) {
-          audioRef.current.pause()
-          setIsPlaying(false)
-          console.log('Audio paused')
-        } else {
-          // Reset any previous errors
-          setError('')
-          
-          // Ensure the audio src is set
-          if (audioRef.current.src !== generatedTrack.url) {
-            console.log('Setting audio src to:', generatedTrack.url)
-            // Build full URL if the track URL is relative
-            const audioUrl = generatedTrack.url.startsWith('http') 
-              ? generatedTrack.url 
-              : `${API_BASE_URL}${generatedTrack.url}`;
-            console.log('Full audio URL:', audioUrl);
-            audioRef.current.src = audioUrl;
-            // Wait for the audio to load
-            await new Promise((resolve, reject) => {
-              const handleCanPlay = () => {
-                audioRef.current.removeEventListener('canplay', handleCanPlay)
-                audioRef.current.removeEventListener('error', handleError)
-                resolve()
-              }
-              const handleError = (e) => {
-                audioRef.current.removeEventListener('canplay', handleCanPlay)
-                audioRef.current.removeEventListener('error', handleError)
-                reject(e)
-              }
-              audioRef.current.addEventListener('canplay', handleCanPlay)
-              audioRef.current.addEventListener('error', handleError)
-            })
-          }
-          
-          console.log('Attempting to play audio...')
-          const playPromise = audioRef.current.play()
-          
-          if (playPromise !== undefined) {
-            await playPromise
-            setIsPlaying(true)
-            console.log('Audio playing successfully')
-          }
+        // Set the audio source if it's different
+        if (audioRef.current.src !== audioUrl) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.load();
         }
-      } catch (error) {
-        console.error('Audio playback error:', error)
-        setError(`Audio playback failed: ${error.message || 'Unknown error'}`)
-        setIsPlaying(false)
         
-        // Try to create a working audio URL as fallback
-        if (generatedTrack?.url) {
-          console.log('Trying fallback audio...')
-          try {
-            // Create a simple beep as fallback
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-            const oscillator = audioContext.createOscillator()
-            const gainNode = audioContext.createGain()
-            
-            oscillator.connect(gainNode)
-            gainNode.connect(audioContext.destination)
-            
-            oscillator.frequency.setValueAtTime(440, audioContext.currentTime) // A4 note
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1)
-            
-            oscillator.start(audioContext.currentTime)
-            oscillator.stop(audioContext.currentTime + 1)
-            
-            setSuccess('Playing fallback audio tone (generated music will be implemented)')
-          } catch (fallbackError) {
-            console.error('Fallback audio failed:', fallbackError)
-          }
+        // Attempt to play
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setIsPlaying(true);
+          }).catch(error => {
+            console.error('Audio playback error:', error);
+            if (error.name === 'NotAllowedError') {
+              setError('Audio autoplay is blocked. Please click the play button after user interaction.');
+            } else if (error.name === 'NotSupportedError') {
+              setError('Audio format not supported by your browser.');
+            } else {
+              setError(`Audio format not supported or failed to load: ${error.message}`);
+            }
+          });
         }
       }
-    } else {
-      console.warn('No audio ref or generated track available')
-      setError('No audio available to play')
+    } catch (error) {
+      console.error('Playback error:', error);
+      setError(`Audio playback failed: ${error.message}`);
     }
   }
 
@@ -341,7 +314,7 @@ const MusicGenerator = () => {
         // Build full URL if the track URL is relative
         const audioUrl = generatedTrack.url.startsWith('http') 
           ? generatedTrack.url 
-          : `http://localhost:5002${generatedTrack.url}`;
+          : `${API_BASE_URL}${generatedTrack.url}`;
         console.log('Full audio URL for useEffect:', audioUrl);
         audio.src = audioUrl;
         audio.load(); // Force reload
@@ -549,28 +522,54 @@ const MusicGenerator = () => {
                   crossOrigin="anonymous"
                   onLoadStart={() => console.log('Audio load start')}
                   onCanPlay={() => console.log('Audio can play')}
-                  onError={(e) => console.error('Audio element error:', e)}
+                  onError={(e) => {
+                    console.error('Audio element error:', e);
+                    const errorMessage = getAudioErrorMessage(e.target.error);
+                    setError(`Audio error: ${errorMessage}`);
+                  }}
                 />
                 
                 {/* Debug info */}
                 {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-500 mb-2 font-mono">
-                    <div>Audio URL: {generatedTrack.url.substring(0, 50)}...</div>
-                    <div>Ready State: {audioRef.current?.readyState || 'Not loaded'}</div>
-                    <div>Duration: {audioRef.current?.duration || 'Unknown'}</div>
+                  <div className="text-xs text-gray-500 mb-2 font-mono bg-gray-100 p-2 rounded">
+                    <div>🔗 Audio URL: {generatedTrack.url || 'No URL'}</div>
+                    <div>📊 Ready State: {audioRef.current?.readyState || 'Not loaded'} (0=nothing, 1=metadata, 2=current, 3=future, 4=enough)</div>
+                    <div>⏱️ Duration: {audioRef.current?.duration || 'Unknown'}</div>
+                    <div>🎵 Can Play: {audioRef.current?.readyState >= 3 ? '✅' : '❌'}</div>
+                    <div>📱 User Agent: {navigator.userAgent.includes('Safari') ? '🦎 Safari' : navigator.userAgent.includes('Chrome') ? '🟢 Chrome' : '🌐 Other'}</div>
+                    <button 
+                      onClick={() => {
+                        console.log('Manual audio test...');
+                        if (audioRef.current) {
+                          console.log('Audio element exists');
+                          console.log('Current src:', audioRef.current.src);
+                          console.log('Ready state:', audioRef.current.readyState);
+                          audioRef.current.load();
+                          audioRef.current.play().then(() => {
+                            console.log('Manual play successful');
+                          }).catch(err => {
+                            console.error('Manual play failed:', err);
+                            alert(`Manual play failed: ${err.message}`);
+                          });
+                        }
+                      }}
+                      className="bg-blue-500 text-white px-2 py-1 rounded text-xs ml-2"
+                    >
+                      🧪 Test Audio
+                    </button>
                   </div>
                 )}
                 
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                      {generatedTrack.title}
+                      {generatedTrack.title || 'Generated Track'}
                     </h3>
                     <p className="text-gray-600">
-                      Duration: {generatedTrack.duration}s • {generatedTrack.genre} • {generatedTrack.mood}
+                      Duration: {generatedTrack.duration || 30}s • {generatedTrack.genre || 'Unknown'} • {generatedTrack.mood || 'Unknown'}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      License: 100% Royalty-Free • Track ID: {generatedTrack.id}
+                      License: 100% Royalty-Free • Track ID: {generatedTrack.id || 'unknown'}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">

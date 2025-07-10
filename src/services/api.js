@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -96,6 +96,15 @@ export const musicAPI = {
     }
   },
 
+  async pollGeneration(trackId) {
+    try {
+      const response = await api.get(`/api/poll-generation/${trackId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   async generateEnhancedMusic(options = {}) {
     try {
       const response = await api.post('/api/generate-enhanced-music', options);
@@ -176,7 +185,7 @@ export const metadataAPI = {
 export const healthAPI = {
   async checkHealth() {
     try {
-      const response = await api.get('/health');
+      const response = await api.get('/api/health');
       return response.data;
     } catch (error) {
       console.error('Health check failed:', error);

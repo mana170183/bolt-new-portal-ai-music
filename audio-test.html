@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Comprehensive Audio Test</title>
+</head>
+<body>
+    <h1>Audio Playback Test</h1>
+    
+    <div>
+        <h2>Method 1: Direct Audio Element</h2>
+        <audio id="directAudio" controls preload="metadata">
+            <source src="http://localhost:3000/api/demo-audio" type="audio/wav">
+        </audio>
+        <button onclick="testDirect()">Test Direct</button>
+    </div>
+
+    <div>
+        <h2>Method 2: JavaScript Controlled</h2>
+        <audio id="jsAudio" controls preload="none"></audio>
+        <button onclick="testJavaScript()">Test JavaScript</button>
+    </div>
+
+    <div>
+        <h2>Method 3: Fetch and Blob</h2>
+        <audio id="blobAudio" controls preload="none"></audio>
+        <button onclick="testBlob()">Test Blob</button>
+    </div>
+
+    <div id="output" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            output.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+        }
+
+        function testDirect() {
+            log('Testing direct audio element...');
+            const audio = document.getElementById('directAudio');
+            audio.play().then(() => {
+                log('Direct audio playing successfully');
+            }).catch(err => {
+                log('Direct audio error: ' + err.message);
+            });
+        }
+
+        function testJavaScript() {
+            log('Testing JavaScript-controlled audio...');
+            const audio = document.getElementById('jsAudio');
+            audio.src = 'http://localhost:3000/api/demo-audio';
+            audio.load();
+            
+            audio.addEventListener('canplay', () => log('JS audio can play'));
+            audio.addEventListener('error', (e) => log('JS audio error: ' + (e.target.error ? e.target.error.code : 'unknown')));
+            
+            audio.play().then(() => {
+                log('JS audio playing successfully');
+            }).catch(err => {
+                log('JS audio play error: ' + err.message);
+            });
+        }
+
+        async function testBlob() {
+            log('Testing blob-based audio...');
+            try {
+                const response = await fetch('http://localhost:3000/api/demo-audio');
+                log('Fetch response status: ' + response.status);
+                log('Fetch response headers: ' + response.headers.get('content-type'));
+                
+                const blob = await response.blob();
+                log('Blob size: ' + blob.size + ' bytes');
+                log('Blob type: ' + blob.type);
+                
+                const url = URL.createObjectURL(blob);
+                const audio = document.getElementById('blobAudio');
+                audio.src = url;
+                
+                audio.addEventListener('canplay', () => log('Blob audio can play'));
+                audio.addEventListener('error', (e) => log('Blob audio error: ' + (e.target.error ? e.target.error.code : 'unknown')));
+                
+                audio.play().then(() => {
+                    log('Blob audio playing successfully');
+                }).catch(err => {
+                    log('Blob audio play error: ' + err.message);
+                });
+            } catch (err) {
+                log('Blob test error: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
