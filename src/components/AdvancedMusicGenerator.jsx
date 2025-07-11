@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Music, Settings, Download, Play, Pause, Volume2, 
@@ -44,6 +42,8 @@ const AdvancedMusicGenerator = () => {
 
   const [availableInstruments, setAvailableInstruments] = useState([]);
   const [templates, setTemplates] = useState({});
+  const [presets, setPresets] = useState([]);
+  const [lyricsAnalysis, setLyricsAnalysis] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedTrack, setGeneratedTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -54,6 +54,7 @@ const AdvancedMusicGenerator = () => {
   const [availableMoods, setAvailableMoods] = useState([]);
   const [userQuota, setUserQuota] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Instrument icons mapping
   const instrumentIcons = {
@@ -121,69 +122,133 @@ const AdvancedMusicGenerator = () => {
     const initializeStudio = async () => {
       try {
         console.log("Initializing Advanced Studio...");
-        if (!authAPI.isAuthenticated()) {
-          console.log("Authenticating...");
-          await authAPI.generateToken('demo_user', 'free');
-        }
-        setIsAuthenticated(true);
-        console.log("Authentication successful.");
+        
+        // Set default fallback data first
+        const defaultInstruments = [
+          { id: 'piano', name: 'Piano' },
+          { id: 'guitar', name: 'Guitar' },
+          { id: 'drums', name: 'Drums' },
+          { id: 'bass', name: 'Bass' }
+        ];
+        const defaultGenres = [
+          { id: 'pop', name: 'Pop' },
+          { id: 'rock', name: 'Rock' },
+          { id: 'jazz', name: 'Jazz' },
+          { id: 'classical', name: 'Classical' }
+        ];
+        const defaultMoods = [
+          { id: 'upbeat', name: 'Upbeat' },
+          { id: 'calm', name: 'Calm' },
+          { id: 'energetic', name: 'Energetic' },
+          { id: 'melancholic', name: 'Melancholic' }
+        ];
+        const defaultTemplates = {
+          pop_ballad: { name: 'Pop Ballad', description: 'Emotional pop song', genre: 'pop', mood: 'calm' },
+          rock_anthem: { name: 'Rock Anthem', description: 'High energy rock', genre: 'rock', mood: 'energetic' }
+        };
 
-        // Try each API call individually, fallback to []/{} if any fail
-        let instrumentsResponse = { instruments: [] };
-        let templatesResponse = { templates: {} };
-        let genresResponse = { genres: [] };
-        let moodsResponse = { moods: [] };
-        let quotaResponse = {};
+        // Set defaults immediately
+        setAvailableInstruments(defaultInstruments);
+        setAvailableGenres(defaultGenres);
+        setAvailableMoods(defaultMoods);
+        setTemplates(defaultTemplates);
+
+        // Try to authenticate
+        try {
+          if (!authAPI.isAuthenticated()) {
+            console.log("Authenticating...");
+            await authAPI.generateToken('demo_user', 'free');
+          }
+          setIsAuthenticated(true);
+          console.log("Authentication successful.");
+        } catch (e) {
+          console.warn("Authentication failed, continuing with defaults:", e);
+        }
+
+        // Try each API call individually, fallback to defaults if any fail
         let errorMessages = [];
+        
         try {
-          instrumentsResponse = await metadataAPI.getInstruments();
+          const instrumentsResponse = await metadataAPI.getInstruments();
+          if (instrumentsResponse?.instruments) {
+            setAvailableInstruments(instrumentsResponse.instruments);
+          }
         } catch (e) {
-          errorMessages.push('Instruments: ' + (e?.message || e));
+          console.warn('Failed to load instruments:', e);
+          errorMessages.push('Instruments');
         }
+        
         try {
-          templatesResponse = await metadataAPI.getCompositionTemplates();
+          const templatesResponse = await metadataAPI.getCompositionTemplates();
+          if (templatesResponse?.templates) {
+            setTemplates(templatesResponse.templates);
+          }
         } catch (e) {
-          errorMessages.push('Templates: ' + (e?.message || e));
+          console.warn('Failed to load templates:', e);
+          errorMessages.push('Templates');
         }
+        
         try {
-          genresResponse = await metadataAPI.getGenres();
+          const genresResponse = await metadataAPI.getGenres();
+          if (genresResponse?.genres) {
+            setAvailableGenres(genresResponse.genres);
+          }
         } catch (e) {
-          errorMessages.push('Genres: ' + (e?.message || e));
+          console.warn('Failed to load genres:', e);
+          errorMessages.push('Genres');
         }
+        
         try {
-          moodsResponse = await metadataAPI.getMoods();
+          const moodsResponse = await metadataAPI.getMoods();
+          if (moodsResponse?.moods) {
+            setAvailableMoods(moodsResponse.moods);
+          }
         } catch (e) {
-          errorMessages.push('Moods: ' + (e?.message || e));
+          console.warn('Failed to load moods:', e);
+          errorMessages.push('Moods');
         }
+        
         try {
-          quotaResponse = await musicAPI.getUserQuota();
+          const quotaResponse = await musicAPI.getUserQuota();
+          if (quotaResponse?.quota) {
+            setUserQuota(quotaResponse.quota);
+          }
         } catch (e) {
-          errorMessages.push('Quota: ' + (e?.message || e));
+          console.warn('Failed to load quota:', e);
+          errorMessages.push('Quota');
         }
 
-        setAvailableInstruments(instrumentsResponse?.instruments || []);
-        setTemplates(templatesResponse?.templates || {});
-        setAvailableGenres(genresResponse?.genres || []);
-        setAvailableMoods(moodsResponse?.moods || []);
-        if (quotaResponse?.quota) {
-          setUserQuota(quotaResponse.quota);
+        // Load presets (non-critical)
+        try {
+          await loadPresets();
+        } catch (e) {
+          console.warn('Failed to load presets:', e);
         }
-        setFormData(prev => ({
-          ...prev,
-          genre: genresResponse?.genres?.[0]?.id || 'pop',
-          mood: moodsResponse?.moods?.[0]?.id || 'upbeat',
-          instruments: instrumentsResponse?.instruments?.[0] ? [instrumentsResponse.instruments[0].id] : [],
-          template: Object.keys(templatesResponse?.templates || {})[0] || 'pop_ballad'
-        }));
 
         if (errorMessages.length > 0) {
-          setError('Some data failed to load: ' + errorMessages.join(' | '));
+          setError('Some data failed to load: ' + errorMessages.join(', ') + '. Using defaults.');
         } else {
           setError('');
         }
       } catch (err) {
         console.error("Failed to initialize Advanced Studio:", err);
-        setError("Failed to load studio data: " + (err?.message || err));
+        setError("Failed to load studio data: " + (err?.message || err) + ". Using defaults.");
+        // Ensure we have at least basic data
+        setAvailableInstruments([
+          { id: 'piano', name: 'Piano' },
+          { id: 'guitar', name: 'Guitar' },
+          { id: 'drums', name: 'Drums' }
+        ]);
+        setAvailableGenres([
+          { id: 'pop', name: 'Pop' },
+          { id: 'rock', name: 'Rock' }
+        ]);
+        setAvailableMoods([
+          { id: 'upbeat', name: 'Upbeat' },
+          { id: 'calm', name: 'Calm' }
+        ]);
+      } finally {
+        setIsLoading(false);
       }
     };
     initializeStudio();
@@ -202,6 +267,68 @@ const AdvancedMusicGenerator = () => {
       instruments: prev.instruments.includes(instrumentId)
         ? prev.instruments.filter(id => id !== instrumentId)
         : [...prev.instruments, instrumentId]
+    }));
+  };
+
+  const analyzeLyrics = async () => {
+    if (!formData.lyrics.trim()) {
+      setError('Please enter lyrics to analyze');
+      return;
+    }
+
+    try {
+      setError('');
+      const result = await musicAPI.analyzeLyrics(formData.lyrics);
+      if (result?.status === 'success' && result?.analysis) {
+        setLyricsAnalysis(result.analysis);
+        setSuccess('Lyrics analyzed successfully!');
+        
+        // Auto-apply suggestions from analysis
+        if (result.analysis.suggested_mood) {
+          setFormData(prev => ({ ...prev, mood: result.analysis.suggested_mood }));
+        }
+        if (result.analysis.suggested_genre) {
+          setFormData(prev => ({ ...prev, genre: result.analysis.suggested_genre }));
+        }
+        if (result.analysis.suggested_tempo) {
+          setFormData(prev => ({ ...prev, tempo_bpm: result.analysis.suggested_tempo }));
+        }
+      } else {
+        setError(result?.message || 'Failed to analyze lyrics');
+      }
+    } catch (error) {
+      console.error('Lyrics analysis failed:', error);
+      setError(error?.message || 'Failed to analyze lyrics');
+    }
+  };
+
+  const loadPresets = async () => {
+    try {
+      const result = await musicAPI.getPresets();
+      if (result?.status === 'success' && result?.presets) {
+        setPresets(result.presets);
+      }
+    } catch (error) {
+      console.warn('Failed to load presets:', error);
+      // Don't set error state as this is non-critical
+    }
+  };
+
+  const applyPreset = (preset) => {
+    setFormData(prev => ({
+      ...prev,
+      ...preset,
+      lyrics: prev.lyrics // Keep existing lyrics
+    }));
+    setSuccess(`Applied preset: ${preset.name}`);
+  };
+
+  const handleStructureToggle = (structureElement) => {
+    setFormData(prev => ({
+      ...prev,
+      structure: prev.structure.includes(structureElement)
+        ? prev.structure.filter(s => s !== structureElement)
+        : [...prev.structure, structureElement]
     }));
   };
 
@@ -234,13 +361,13 @@ const AdvancedMusicGenerator = () => {
     setSuccess('');
 
     try {
-      const result = await musicAPI.generateEnhancedMusic(formData);
+      const result = await musicAPI.generateAdvancedMusic(formData);
 
-      if (result.status === 'success') {
+      if (result.success === true) {
         setGeneratedTrack({
-          id: result.track_id,
+          id: result.metadata?.filename || `track_${Date.now()}`,
           title: result.metadata?.title || 'Generated Composition',
-          url: result.audio_url,
+          url: result.audio_file ? `/api/download/${result.audio_file}` : result.download_url,
           download_url: result.download_url,
           metadata: result.metadata,
           stem_urls: result.stem_urls || {}
@@ -249,7 +376,7 @@ const AdvancedMusicGenerator = () => {
         
         // Update quota
         const updatedQuota = await musicAPI.getUserQuota();
-        if (updatedQuota.status === 'success') {
+        if (updatedQuota.success === true) {
           setUserQuota(updatedQuota.quota);
         }
       } else {
@@ -288,18 +415,28 @@ const AdvancedMusicGenerator = () => {
   useEffect(() => {
     if (generatedTrack?.url && audioRef.current) {
       const audio = audioRef.current;
+      // Use relative URL for proxy compatibility in development
       const audioUrl = generatedTrack.url.startsWith('http')
         ? generatedTrack.url
-        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${generatedTrack.url}`;
+        : generatedTrack.url;
       
+      console.log('Setting audio URL:', audioUrl);
       audio.src = audioUrl;
       audio.load();
 
       const handleEnded = () => setIsPlaying(false);
+      const handleError = (e) => {
+        console.error('Audio load error:', e);
+        setError('Audio file could not be loaded. Please try generating again.');
+        setIsPlaying(false);
+      };
+
       audio.addEventListener('ended', handleEnded);
+      audio.addEventListener('error', handleError);
 
       return () => {
         audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('error', handleError);
       };
     }
   }, [generatedTrack]);
@@ -307,28 +444,43 @@ const AdvancedMusicGenerator = () => {
 
   const downloadTrack = () => {
     if (generatedTrack?.download_url) {
+      // Use relative URL for proxy compatibility in development
       const downloadUrl = generatedTrack.download_url.startsWith('http')
         ? generatedTrack.download_url
-        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${generatedTrack.download_url}`;
+        : generatedTrack.download_url;
       window.open(downloadUrl, '_blank');
     }
   };
 
-  const handleStructureToggle = (section) => {
-    setFormData(prev => ({
-      ...prev,
-      structure: prev.structure.includes(section)
-        ? prev.structure.filter(s => s !== section)
-        : [...prev.structure, section]
-    }));
-  };
-
   const downloadStem = (instrument, url) => {
+    // Use relative URL for proxy compatibility in development
     const downloadUrl = url.startsWith('http')
       ? url
-      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${url}`;
+      : url;
     window.open(downloadUrl, '_blank');
   };
+
+  // Add loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center space-x-3">
+            <Music className="w-8 h-8 text-blue-600" />
+            <h1 className="text-4xl font-bold text-gray-900">
+              Advanced AI Music Studio
+            </h1>
+          </div>
+          <p className="text-xl text-gray-600">
+            Loading studio components...
+          </p>
+        </div>
+        <div className="flex justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
@@ -396,7 +548,44 @@ const AdvancedMusicGenerator = () => {
               value={formData.lyrics}
               onChange={(e) => handleInputChange('lyrics', e.target.value)}
             />
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={analyzeLyrics}
+                disabled={!formData.lyrics.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Analyze Lyrics
+              </button>
+              {lyricsAnalysis && (
+                <div className="flex-1 text-sm text-gray-600 ml-2">
+                  <div>Suggested mood: {lyricsAnalysis.suggested_mood}</div>
+                  <div>Suggested genre: {lyricsAnalysis.suggested_genre}</div>
+                  <div>Suggested tempo: {lyricsAnalysis.suggested_tempo} BPM</div>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Presets */}
+          {presets && presets.length > 0 && (
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <h3 className="text-lg font-semibold mb-4">Quick Presets</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {presets.map((preset, index) => (
+                  <button
+                    key={index}
+                    onClick={() => applyPreset(preset)}
+                    className="p-3 text-left border rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  >
+                    <div className="font-medium">{preset?.name || `Preset ${index + 1}`}</div>
+                    <div className="text-sm text-gray-500">
+                      {preset?.description || 'Music preset'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Genre and Mood */}
           <div className="bg-white rounded-lg p-6 shadow-md">
@@ -409,9 +598,9 @@ const AdvancedMusicGenerator = () => {
                   value={formData.genre}
                   onChange={(e) => handleInputChange('genre', e.target.value)}
                 >
-                  {availableGenres.map(genre => (
-                    <option key={genre.id} value={genre.id}>
-                      {genre.name}
+                  {(availableGenres || []).map(genre => (
+                    <option key={genre?.id || genre} value={genre?.id || genre}>
+                      {genre?.name || genre}
                     </option>
                   ))}
                 </select>
@@ -423,9 +612,9 @@ const AdvancedMusicGenerator = () => {
                   value={formData.mood}
                   onChange={(e) => handleInputChange('mood', e.target.value)}
                 >
-                  {availableMoods.map(mood => (
-                    <option key={mood.id} value={mood.id}>
-                      {mood.name}
+                  {(availableMoods || []).map(mood => (
+                    <option key={mood?.id || mood} value={mood?.id || mood}>
+                      {mood?.name || mood}
                     </option>
                   ))}
                 </select>
@@ -437,15 +626,15 @@ const AdvancedMusicGenerator = () => {
           <div className="bg-white rounded-lg p-6 shadow-md">
             <h3 className="text-lg font-semibold mb-4">Quick Templates</h3>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(templates).map(([key, template]) => (
+              {Object.entries(templates || {}).map(([key, template]) => (
                 <button
                   key={key}
                   onClick={() => applyTemplate(key)}
                   className="p-3 text-left border rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
                 >
-                  <div className="font-medium">{template.name}</div>
+                  <div className="font-medium">{template?.name || key}</div>
                   <div className="text-sm text-gray-500">
-                    {template.description}
+                    {template?.description || 'Template'}
                   </div>
                 </button>
               ))}
@@ -556,7 +745,7 @@ const AdvancedMusicGenerator = () => {
             )}
           </div>
 
-          {/* Style Complexity, Key, and Structure */}
+          {/* Composition Settings */}
           <div className="bg-white rounded-lg p-6 shadow-md">
             <h3 className="text-lg font-semibold mb-4">Composition Settings</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -592,32 +781,6 @@ const AdvancedMusicGenerator = () => {
                 </select>
               </div>
             </div>
-
-            {/* Song Structure */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium mb-2">Song Structure</label>
-              <div className="flex flex-wrap gap-2">
-                {structureOptions.map(section => (
-                  <button
-                    key={section.value}
-                    onClick={() => handleStructureToggle(section.value)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
-                      formData.structure.includes(section.value)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.structure.includes(section.value)}
-                      readOnly
-                      className="form-checkbox h-4 w-4 text-blue-600"
-                    />
-                    <span>{section.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -630,20 +793,20 @@ const AdvancedMusicGenerator = () => {
               Select Instruments
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {availableInstruments.map(instrument => {
-                const Icon = instrumentIcons[instrument.id] || Music;
+              {(availableInstruments || []).map(instrument => {
+                const Icon = instrumentIcons[instrument?.id] || Music;
                 return (
                   <button
-                    key={instrument.id}
-                    onClick={() => handleInstrumentToggle(instrument.id)}
+                    key={instrument?.id || instrument}
+                    onClick={() => handleInstrumentToggle(instrument?.id || instrument)}
                     className={`p-4 rounded-lg border-2 flex flex-col items-center justify-center space-y-2 transition-all ${
-                      formData.instruments.includes(instrument.id)
+                      formData.instruments.includes(instrument?.id || instrument)
                         ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
                     <Icon className="w-8 h-8" />
-                    <span className="text-sm font-medium">{instrument.name}</span>
+                    <span className="text-sm font-medium">{instrument?.name || instrument}</span>
                   </button>
                 );
               })}

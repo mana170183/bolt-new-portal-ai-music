@@ -838,6 +838,16 @@ def get_user_quota():
             'error': 'Failed to check user quota'
         }), 500
 
+# Data collection integration
+try:
+    from data_collection_integration import register_data_collection_routes
+    register_data_collection_routes(app)
+    logger.info("Data collection routes registered successfully")
+except ImportError as e:
+    logger.warning(f"Data collection integration not available: {e}")
+except Exception as e:
+    logger.error(f"Error registering data collection routes: {e}")
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))
     print(f"🚀 Starting Flask server on port {port}...")

@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect, useRef } from 'react'
 import { 
   Play, 
@@ -15,9 +13,6 @@ import {
   Zap
 } from 'lucide-react'
 import { musicAPI, metadataAPI, authAPI, healthAPI } from '../services/api'
-
-// API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 // Helper function to get human-readable audio error messages
 const getAudioErrorMessage = (error) => {
@@ -59,31 +54,45 @@ const MusicGenerator = () => {
 
   const initializeComponent = async () => {
     try {
-      // Check backend health
+      // Check backend health first
       console.log('Starting health check...')
       const healthData = await healthAPI.checkHealth()
       console.log('Health check successful:', healthData)
 
       // Authenticate
       if (!authAPI.isAuthenticated()) {
+        console.log('Generating authentication token...')
         await authAPI.generateToken('demo_user', 'free')
       }
       setIsAuthenticated(true)
 
-      // Load metadata
-      let genresData, moodsData, quotaData;
+      // Load metadata with individual error handling
+      let genresData = { genres: [] };
+      let moodsData = { moods: [] };
+      let quotaData = { quota: null };
+
       try {
-        [genresData, moodsData, quotaData] = await Promise.all([
-          metadataAPI.getGenres(),
-          metadataAPI.getMoods(),
-          musicAPI.getUserQuota()
-        ]);
-      } catch (metadataError) {
-        console.error('Failed to fetch metadata from API:', metadataError);
-        setError('Could not load data from the server. Please check your connection and refresh.');
-        // Set empty arrays to prevent crashes, and let the fallback logic handle it
-        genresData = { genres: [] };
-        moodsData = { moods: [] };
+        console.log('Fetching genres...')
+        genresData = await metadataAPI.getGenres()
+        console.log('Genres loaded:', genresData.genres?.length || 0)
+      } catch (genresError) {
+        console.error('Failed to fetch genres:', genresError)
+      }
+
+      try {
+        console.log('Fetching moods...')
+        moodsData = await metadataAPI.getMoods()
+        console.log('Moods loaded:', moodsData.moods?.length || 0)
+      } catch (moodsError) {
+        console.error('Failed to fetch moods:', moodsError)
+      }
+
+      try {
+        console.log('Fetching user quota...')
+        quotaData = await musicAPI.getUserQuota()
+        console.log('Quota loaded:', quotaData.quota)
+      } catch (quotaError) {
+        console.error('Failed to fetch quota:', quotaError)
       }
 
       // Set genres, with fallback
@@ -143,7 +152,8 @@ const MusicGenerator = () => {
     setSuccess('')
     
     try {
-      const result = await musicAPI.generateMusic(prompt, {
+      const result = await musicAPI.generateSimpleMusic({
+        prompt,
         duration,
         genre,
         mood
@@ -154,14 +164,14 @@ const MusicGenerator = () => {
       if (result.success === true) {
         // Create track object from backend response
         const track = {
-          id: result.metadata?.filename?.replace('.wav', '') || 'track_' + Date.now(),
-          url: result.download_url,
+          id: result.metadata?.filename || `track_${Date.now()}`,
+          url: result.audio_file ? `/api/download/${result.audio_file}` : result.download_url,
           download_url: result.download_url,
-          title: result.metadata?.prompt || prompt,
+          title: result.metadata?.title || prompt,
           duration: result.metadata?.duration || duration,
           genre: result.metadata?.genre || genre,
           mood: result.metadata?.mood || mood,
-          filename: result.audio_file || result.metadata?.filename
+          filename: result.metadata?.filename || result.audio_file
         }
         
         console.log('Created track object:', track)
@@ -204,10 +214,10 @@ const MusicGenerator = () => {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        // Build full URL if needed
+        // Use relative URL for proxy
         const audioUrl = generatedTrack.url.startsWith('http') 
           ? generatedTrack.url 
-          : `${API_BASE_URL}${generatedTrack.url}`;
+          : generatedTrack.url;
         
         // Set the audio source if it's different
         if (audioRef.current.src !== audioUrl) {
@@ -240,10 +250,10 @@ const MusicGenerator = () => {
 
   const handleDownload = () => {
     if (generatedTrack?.download_url) {
-      // Build full URL if the download URL is relative
+      // Use relative URL for proxy
       const downloadUrl = generatedTrack.download_url.startsWith('http') 
         ? generatedTrack.download_url 
-        : `${API_BASE_URL}${generatedTrack.download_url}`;
+        : generatedTrack.download_url;
       window.open(downloadUrl, '_blank');
     }
   }
@@ -314,7 +324,7 @@ const MusicGenerator = () => {
         // Build full URL if the track URL is relative
         const audioUrl = generatedTrack.url.startsWith('http') 
           ? generatedTrack.url 
-          : `${API_BASE_URL}${generatedTrack.url}`;
+          : generatedTrack.url; // Use relative URL for proxy
         console.log('Full audio URL for useEffect:', audioUrl);
         audio.src = audioUrl;
         audio.load(); // Force reload

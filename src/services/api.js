@@ -1,7 +1,10 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// In development, use relative URLs to leverage Vite proxy
+// In production, use the full backend URL
+const isDevelopment = import.meta.env.DEV;
+const API_BASE_URL = isDevelopment ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:5002');
 
 // Create axios instance with default config
 const api = axios.create({
@@ -117,6 +120,80 @@ export const musicAPI = {
     }
   },
 
+  // Advanced Music Generation APIs
+  async generateSimpleMusic(options = {}) {
+    try {
+      const response = await api.post('/api/generate-music', options);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+      throw error;
+    }
+  },
+
+  async generateAdvancedMusic(options = {}) {
+    try {
+      const response = await api.post('/api/advanced-generate', options);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+      throw error;
+    }
+  },
+
+  async analyzeLyrics(lyrics) {
+    try {
+      // Since there's no lyrics endpoint, we'll return a mock response
+      return {
+        analysis: {
+          mood: 'energetic',
+          themes: ['love', 'hope'],
+          suggested_genre: 'pop',
+          energy_level: 7
+        }
+      };
+    } catch (error) {
+      console.error('Error analyzing lyrics:', error);
+      throw error;
+    }
+  },
+
+  async getPresets() {
+    try {
+      const response = await api.get('/api/composition-templates');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching presets:', error);
+      throw error;
+    }
+  },
+
+  async getGenerationHistory() {
+    try {
+      // Since there's no history endpoint, return empty array
+      return { tracks: [] };
+    } catch (error) {
+      console.error('Error fetching generation history:', error);
+      throw error;
+    }
+  },
+
+  async downloadTrack(trackId) {
+    try {
+      const response = await api.get(`/api/download/${trackId}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading track:', error);
+      throw error;
+    }
+  },
+
   async getUserTracks() {
     try {
       const response = await api.get('/api/tracks');
@@ -185,7 +262,7 @@ export const metadataAPI = {
 export const healthAPI = {
   async checkHealth() {
     try {
-      const response = await api.get('/api/health');
+      const response = await api.get('/health');
       return response.data;
     } catch (error) {
       console.error('Health check failed:', error);

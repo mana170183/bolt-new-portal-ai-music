@@ -1,27 +1,12 @@
 {
   "version": 2,
-  "builds": [
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "outputDirectory": "dist"
-      }
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "env": {
-    "REACT_APP_API_URL": "@api-url",
-    "REACT_APP_SUPABASE_URL": "@supabase-url",
-    "REACT_APP_SUPABASE_ANON_KEY": "@supabase-anon-key"
-  }
+  ]
 }
