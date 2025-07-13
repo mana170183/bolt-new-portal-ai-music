@@ -17,7 +17,7 @@ function App() {
       <Features />
       
       {/* Mode Selector */}
-      <div className="bg-gray-100 py-8">
+      <div className="bg-gray-100 py-8" id="generator">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex justify-center space-x-4 mb-8">
             <button

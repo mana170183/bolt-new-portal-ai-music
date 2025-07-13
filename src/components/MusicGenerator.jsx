@@ -12,7 +12,25 @@ import {
   CheckCircle,
   Zap
 } from 'lucide-react'
-import { musicAPI, metadataAPI, authAPI } from '../services/api'
+import { musicAPI, metadataAPI, authAPI, healthAPI } from '../services/api'
+
+// Helper function to get human-readable audio error messages
+const getAudioErrorMessage = (error) => {
+  if (!error) return 'Unknown audio error';
+  
+  switch (error.code) {
+    case error.MEDIA_ERR_ABORTED:
+      return 'Audio playback was aborted';
+    case error.MEDIA_ERR_NETWORK:
+      return 'Network error while loading audio';
+    case error.MEDIA_ERR_DECODE:
+      return 'Audio format not supported or corrupted';
+    case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+      return 'Audio format not supported by browser';
+    default:
+      return `Audio error (code: ${error.code})`;
+  }
+};
 
 const MusicGenerator = () => {
   const [prompt, setPrompt] = useState('')
@@ -36,84 +54,82 @@ const MusicGenerator = () => {
 
   const initializeComponent = async () => {
     try {
-      // First check if backend is available
+      // Check backend health first
+      console.log('Starting health check...')
+      const healthData = await healthAPI.checkHealth()
+      console.log('Health check successful:', healthData)
+
+      // Authenticate
+      if (!authAPI.isAuthenticated()) {
+        console.log('Generating authentication token...')
+        await authAPI.generateToken('demo_user', 'free')
+      }
+      setIsAuthenticated(true)
+
+      // Load metadata with individual error handling
+      let genresData = { genres: [] };
+      let moodsData = { moods: [] };
+      let quotaData = { quota: null };
+
       try {
-        console.log('Starting health check...')
-        const healthResponse = await fetch('http://localhost:5001/health', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // Add timeout to prevent hanging
-          signal: AbortSignal.timeout(10000) // 10 second timeout
-        })
-        console.log('Health response status:', healthResponse.status)
-        console.log('Health response headers:', Object.fromEntries(healthResponse.headers))
-        
-        if (!healthResponse.ok) {
-          const errorText = await healthResponse.text()
-          console.log('Health response error body:', errorText)
-          throw new Error(`Health check failed: ${healthResponse.status} - ${errorText}`)
-        }
-        const healthData = await healthResponse.json()
-        console.log('Backend health check passed:', healthData)
-      } catch (healthError) {
-        console.error('Backend health check failed:', healthError)
-        if (healthError.name === 'TimeoutError') {
-          setError('Backend server is taking too long to respond. Please check if the Flask server is running.')
-        } else if (healthError.message.includes('Failed to fetch') || healthError.message.includes('ECONNREFUSED')) {
-          setError('Cannot connect to backend server. Please start the Flask server by running the backend startup script in a separate terminal.')
-        } else {
-          setError(`Backend server error: ${healthError.message}. Please ensure the Flask server is running.`)
-        }
-        return
+        console.log('Fetching genres...')
+        genresData = await metadataAPI.getGenres()
+        console.log('Genres loaded:', genresData.genres?.length || 0)
+      } catch (genresError) {
+        console.error('Failed to fetch genres:', genresError)
       }
 
-      // Check authentication
       try {
-        if (!authAPI.isAuthenticated()) {
-          await authAPI.generateToken('demo_user', 'free')
-        }
-        setIsAuthenticated(true)
-      } catch (authError) {
-        console.error('Authentication failed:', authError)
-        setError(`Authentication failed: ${authError.message || 'Unknown error'}. Please check the backend server logs.`)
-        return
+        console.log('Fetching moods...')
+        moodsData = await metadataAPI.getMoods()
+        console.log('Moods loaded:', moodsData.moods?.length || 0)
+      } catch (moodsError) {
+        console.error('Failed to fetch moods:', moodsError)
       }
 
-      // Load metadata
       try {
-        const [genresData, moodsData, quotaData] = await Promise.all([
-          metadataAPI.getGenres(),
-          metadataAPI.getMoods(),
-          musicAPI.getUserQuota()
-        ])
+        console.log('Fetching user quota...')
+        quotaData = await musicAPI.getUserQuota()
+        console.log('Quota loaded:', quotaData.quota)
+      } catch (quotaError) {
+        console.error('Failed to fetch quota:', quotaError)
+      }
 
-        if (genresData.status === 'success') {
-          setGenres(genresData.genres)
-        }
-        if (moodsData.status === 'success') {
-          setMoods(moodsData.moods)
-        }
-        if (quotaData.status === 'success') {
-          setUserQuota(quotaData.quota)
-        }
-      } catch (metadataError) {
-        console.error('Failed to load metadata:', metadataError)
-        // Set default values if API fails
-        setGenres([
+      // Set genres, with fallback
+      if (genresData?.genres && genresData.genres.length > 0) {
+        setGenres(genresData.genres);
+        setGenre(genresData.genres[0].id);
+      } else {
+        console.warn('Using default genres list.');
+        const defaultGenres = [
           {id: 'pop', name: 'Pop', description: 'Catchy, mainstream melodies'},
           {id: 'rock', name: 'Rock', description: 'Guitar-driven, energetic'},
           {id: 'electronic', name: 'Electronic', description: 'Synthesized, digital sounds'}
-        ])
-        setMoods([
+        ];
+        setGenres(defaultGenres);
+        setGenre(defaultGenres[0].id);
+      }
+
+      // Set moods, with fallback
+      if (moodsData?.moods && moodsData.moods.length > 0) {
+        setMoods(moodsData.moods);
+        setMood(moodsData.moods[0].id);
+      } else {
+        console.warn('Using default moods list.');
+        const defaultMoods = [
           {id: 'upbeat', name: 'Upbeat', description: 'Happy, energetic feeling'},
           {id: 'calm', name: 'Calm', description: 'Peaceful, relaxing'},
           {id: 'energetic', name: 'Energetic', description: 'High-energy, motivating'}
-        ])
-        // Don't show error for metadata loading failure if auth worked
-        console.warn('Using default metadata due to API error')
+        ];
+        setMoods(defaultMoods);
+        setMood(defaultMoods[0].id);
       }
+
+      // Set user quota
+      if (quotaData?.quota) {
+        setUserQuota(quotaData.quota);
+      }
+
     } catch (error) {
       console.error('Initialization error:', error)
       setError(`Failed to initialize: ${error.message || 'Unknown error'}. Please ensure the backend server is running and refresh the page.`)
@@ -136,23 +152,44 @@ const MusicGenerator = () => {
     setSuccess('')
     
     try {
-      const result = await musicAPI.generateMusic(prompt, {
+      const result = await musicAPI.generateSimpleMusic({
+        prompt,
         duration,
         genre,
         mood
       })
 
-      if (result.status === 'success') {
-        setGeneratedTrack(result.track)
-        setSuccess('Music generated successfully!')
+      console.log('Music generation result:', result)
+
+      if (result.success === true) {
+        // Create track object from backend response
+        const track = {
+          id: result.metadata?.filename || `track_${Date.now()}`,
+          url: result.audio_file ? `/api/download/${result.audio_file}` : result.download_url,
+          download_url: result.download_url,
+          title: result.metadata?.title || prompt,
+          duration: result.metadata?.duration || duration,
+          genre: result.metadata?.genre || genre,
+          mood: result.metadata?.mood || mood,
+          filename: result.metadata?.filename || result.audio_file
+        }
+        
+        console.log('Created track object:', track)
+        setGeneratedTrack(track)
+        setSuccess(result.message || 'Music generated successfully!')
         
         // Update quota
-        const updatedQuota = await musicAPI.getUserQuota()
-        if (updatedQuota.status === 'success') {
-          setUserQuota(updatedQuota.quota)
+        try {
+          const updatedQuota = await musicAPI.getUserQuota()
+          if (updatedQuota.success === true) {
+            setUserQuota(updatedQuota.quota)
+          }
+        } catch (quotaError) {
+          console.warn('Failed to update quota:', quotaError)
         }
       } else {
-        setError(result.message || 'Failed to generate music')
+        console.error('Music generation failed:', result)
+        setError(result.message || result.error || 'Failed to generate music')
       }
     } catch (error) {
       console.error('Generation error:', error)
@@ -170,99 +207,54 @@ const MusicGenerator = () => {
   }
 
   const togglePlayback = async () => {
-    if (audioRef.current && generatedTrack) {
-      try {
-        console.log('Toggle playback - Current state:', isPlaying)
-        console.log('Audio URL:', generatedTrack.url)
-        console.log('Audio element ready state:', audioRef.current.readyState)
-        console.log('Audio element src:', audioRef.current.src)
+    if (!audioRef.current || !generatedTrack) return;
+    
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        // Use relative URL for proxy
+        const audioUrl = generatedTrack.url.startsWith('http') 
+          ? generatedTrack.url 
+          : generatedTrack.url;
         
-        if (isPlaying) {
-          audioRef.current.pause()
-          setIsPlaying(false)
-          console.log('Audio paused')
-        } else {
-          // Reset any previous errors
-          setError('')
-          
-          // Ensure the audio src is set
-          if (audioRef.current.src !== generatedTrack.url) {
-            console.log('Setting audio src to:', generatedTrack.url)
-            // Build full URL if the track URL is relative
-            const audioUrl = generatedTrack.url.startsWith('http') 
-              ? generatedTrack.url 
-              : `http://localhost:5001${generatedTrack.url}`
-            console.log('Full audio URL:', audioUrl)
-            audioRef.current.src = audioUrl
-            // Wait for the audio to load
-            await new Promise((resolve, reject) => {
-              const handleCanPlay = () => {
-                audioRef.current.removeEventListener('canplay', handleCanPlay)
-                audioRef.current.removeEventListener('error', handleError)
-                resolve()
-              }
-              const handleError = (e) => {
-                audioRef.current.removeEventListener('canplay', handleCanPlay)
-                audioRef.current.removeEventListener('error', handleError)
-                reject(e)
-              }
-              audioRef.current.addEventListener('canplay', handleCanPlay)
-              audioRef.current.addEventListener('error', handleError)
-            })
-          }
-          
-          console.log('Attempting to play audio...')
-          const playPromise = audioRef.current.play()
-          
-          if (playPromise !== undefined) {
-            await playPromise
-            setIsPlaying(true)
-            console.log('Audio playing successfully')
-          }
+        // Set the audio source if it's different
+        if (audioRef.current.src !== audioUrl) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.load();
         }
-      } catch (error) {
-        console.error('Audio playback error:', error)
-        setError(`Audio playback failed: ${error.message || 'Unknown error'}`)
-        setIsPlaying(false)
         
-        // Try to create a working audio URL as fallback
-        if (generatedTrack?.url) {
-          console.log('Trying fallback audio...')
-          try {
-            // Create a simple beep as fallback
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-            const oscillator = audioContext.createOscillator()
-            const gainNode = audioContext.createGain()
-            
-            oscillator.connect(gainNode)
-            gainNode.connect(audioContext.destination)
-            
-            oscillator.frequency.setValueAtTime(440, audioContext.currentTime) // A4 note
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1)
-            
-            oscillator.start(audioContext.currentTime)
-            oscillator.stop(audioContext.currentTime + 1)
-            
-            setSuccess('Playing fallback audio tone (generated music will be implemented)')
-          } catch (fallbackError) {
-            console.error('Fallback audio failed:', fallbackError)
-          }
+        // Attempt to play
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setIsPlaying(true);
+          }).catch(error => {
+            console.error('Audio playback error:', error);
+            if (error.name === 'NotAllowedError') {
+              setError('Audio autoplay is blocked. Please click the play button after user interaction.');
+            } else if (error.name === 'NotSupportedError') {
+              setError('Audio format not supported by your browser.');
+            } else {
+              setError(`Audio format not supported or failed to load: ${error.message}`);
+            }
+          });
         }
       }
-    } else {
-      console.warn('No audio ref or generated track available')
-      setError('No audio available to play')
+    } catch (error) {
+      console.error('Playback error:', error);
+      setError(`Audio playback failed: ${error.message}`);
     }
   }
 
   const handleDownload = () => {
     if (generatedTrack?.download_url) {
-      // Build full URL if the download URL is relative
+      // Use relative URL for proxy
       const downloadUrl = generatedTrack.download_url.startsWith('http') 
         ? generatedTrack.download_url 
-        : `http://localhost:5001${generatedTrack.download_url}`
-      window.open(downloadUrl, '_blank')
+        : generatedTrack.download_url;
+      window.open(downloadUrl, '_blank');
     }
   }
 
@@ -332,10 +324,10 @@ const MusicGenerator = () => {
         // Build full URL if the track URL is relative
         const audioUrl = generatedTrack.url.startsWith('http') 
           ? generatedTrack.url 
-          : `http://localhost:5001${generatedTrack.url}`
-        console.log('Full audio URL for useEffect:', audioUrl)
-        audio.src = audioUrl
-        audio.load() // Force reload
+          : generatedTrack.url; // Use relative URL for proxy
+        console.log('Full audio URL for useEffect:', audioUrl);
+        audio.src = audioUrl;
+        audio.load(); // Force reload
       }
       
       return () => {
@@ -540,28 +532,54 @@ const MusicGenerator = () => {
                   crossOrigin="anonymous"
                   onLoadStart={() => console.log('Audio load start')}
                   onCanPlay={() => console.log('Audio can play')}
-                  onError={(e) => console.error('Audio element error:', e)}
+                  onError={(e) => {
+                    console.error('Audio element error:', e);
+                    const errorMessage = getAudioErrorMessage(e.target.error);
+                    setError(`Audio error: ${errorMessage}`);
+                  }}
                 />
                 
                 {/* Debug info */}
                 {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-500 mb-2 font-mono">
-                    <div>Audio URL: {generatedTrack.url.substring(0, 50)}...</div>
-                    <div>Ready State: {audioRef.current?.readyState || 'Not loaded'}</div>
-                    <div>Duration: {audioRef.current?.duration || 'Unknown'}</div>
+                  <div className="text-xs text-gray-500 mb-2 font-mono bg-gray-100 p-2 rounded">
+                    <div>🔗 Audio URL: {generatedTrack.url || 'No URL'}</div>
+                    <div>📊 Ready State: {audioRef.current?.readyState || 'Not loaded'} (0=nothing, 1=metadata, 2=current, 3=future, 4=enough)</div>
+                    <div>⏱️ Duration: {audioRef.current?.duration || 'Unknown'}</div>
+                    <div>🎵 Can Play: {audioRef.current?.readyState >= 3 ? '✅' : '❌'}</div>
+                    <div>📱 User Agent: {navigator.userAgent.includes('Safari') ? '🦎 Safari' : navigator.userAgent.includes('Chrome') ? '🟢 Chrome' : '🌐 Other'}</div>
+                    <button 
+                      onClick={() => {
+                        console.log('Manual audio test...');
+                        if (audioRef.current) {
+                          console.log('Audio element exists');
+                          console.log('Current src:', audioRef.current.src);
+                          console.log('Ready state:', audioRef.current.readyState);
+                          audioRef.current.load();
+                          audioRef.current.play().then(() => {
+                            console.log('Manual play successful');
+                          }).catch(err => {
+                            console.error('Manual play failed:', err);
+                            alert(`Manual play failed: ${err.message}`);
+                          });
+                        }
+                      }}
+                      className="bg-blue-500 text-white px-2 py-1 rounded text-xs ml-2"
+                    >
+                      🧪 Test Audio
+                    </button>
                   </div>
                 )}
                 
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                      {generatedTrack.title}
+                      {generatedTrack.title || 'Generated Track'}
                     </h3>
                     <p className="text-gray-600">
-                      Duration: {generatedTrack.duration}s • {generatedTrack.genre} • {generatedTrack.mood}
+                      Duration: {generatedTrack.duration || 30}s • {generatedTrack.genre || 'Unknown'} • {generatedTrack.mood || 'Unknown'}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      License: 100% Royalty-Free • Track ID: {generatedTrack.id}
+                      License: 100% Royalty-Free • Track ID: {generatedTrack.id || 'unknown'}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">

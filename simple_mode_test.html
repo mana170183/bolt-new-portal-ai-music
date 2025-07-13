@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Mode Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            margin: 10px 0;
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        audio {
+            width: 100%;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Simple Mode Music Generation Test</h1>
+    
+    <div class="container">
+        <h2>Test Parameters</h2>
+        <label>Prompt:</label>
+        <textarea id="prompt" rows="2" placeholder="Enter music description">upbeat pop song for testing</textarea>
+        
+        <label>Duration (seconds):</label>
+        <input type="number" id="duration" value="10" min="5" max="60">
+        
+        <label>Genre:</label>
+        <select id="genre">
+            <option value="pop">Pop</option>
+            <option value="rock">Rock</option>
+            <option value="jazz">Jazz</option>
+            <option value="electronic">Electronic</option>
+        </select>
+        
+        <label>Mood:</label>
+        <select id="mood">
+            <option value="upbeat">Upbeat</option>
+            <option value="calm">Calm</option>
+            <option value="energetic">Energetic</option>
+            <option value="dramatic">Dramatic</option>
+        </select>
+        
+        <br><br>
+        <button id="generateBtn" onclick="generateMusic()">🎵 Generate Music</button>
+        <button id="testApiBtn" onclick="testAPI()">🔧 Test API</button>
+        <button onclick="clearLogs()">🗑️ Clear Logs</button>
+    </div>
+
+    <div class="container">
+        <h2>Status</h2>
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+        <div id="loading" style="display:none;">⏳ Generating music...</div>
+    </div>
+
+    <div class="container">
+        <h2>Generated Music</h2>
+        <audio id="audioPlayer" controls style="display:none;">
+            Your browser does not support the audio element.
+        </audio>
+        <br>
+        <button id="downloadBtn" style="display:none;" onclick="downloadMusic()">📥 Download</button>
+    </div>
+
+    <div class="container">
+        <h2>Debug Logs</h2>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5002';
+        let currentTrack = null;
+
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.innerHTML += `[${timestamp}] ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('success').textContent = '';
+            log(`ERROR: ${message}`);
+        }
+
+        function showSuccess(message) {
+            document.getElementById('success').textContent = message;
+            document.getElementById('error').textContent = '';
+            log(`SUCCESS: ${message}`);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('error').textContent = '';
+            document.getElementById('success').textContent = '';
+        }
+
+        async function testAPI() {
+            log('Testing API connectivity...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                log(`Health check response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.status === 'healthy') {
+                    showSuccess('Backend API is healthy!');
+                } else {
+                    showError('Backend API returned unexpected status');
+                }
+            } catch (error) {
+                showError(`API connection failed: ${error.message}`);
+            }
+        }
+
+        async function generateMusic() {
+            const prompt = document.getElementById('prompt').value;
+            const duration = parseInt(document.getElementById('duration').value);
+            const genre = document.getElementById('genre').value;
+            const mood = document.getElementById('mood').value;
+
+            if (!prompt.trim()) {
+                showError('Please enter a music description');
+                return;
+            }
+
+            log(`Starting music generation with params:`);
+            log(`  Prompt: "${prompt}"`);
+            log(`  Duration: ${duration}s`);
+            log(`  Genre: ${genre}`);
+            log(`  Mood: ${mood}`);
+
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const requestBody = {
+                    prompt: prompt,
+                    duration: duration,
+                    genre: genre,
+                    mood: mood
+                };
+
+                log(`Request body: ${JSON.stringify(requestBody, null, 2)}`);
+
+                const response = await fetch(`${API_BASE_URL}/api/generate-music`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                log(`Response status: ${response.status} ${response.statusText}`);
+
+                const result = await response.json();
+                log(`Response data: ${JSON.stringify(result, null, 2)}`);
+
+                if (result.success === true) {
+                    currentTrack = {
+                        url: result.download_url,
+                        download_url: result.download_url,
+                        filename: result.audio_file,
+                        metadata: result.metadata
+                    };
+
+                    log(`Track object created: ${JSON.stringify(currentTrack, null, 2)}`);
+
+                    // Set up audio player
+                    const audioPlayer = document.getElementById('audioPlayer');
+                    const audioUrl = currentTrack.url.startsWith('http') 
+                        ? currentTrack.url 
+                        : `${API_BASE_URL}${currentTrack.url}`;
+                    
+                    log(`Full audio URL: ${audioUrl}`);
+                    
+                    audioPlayer.src = audioUrl;
+                    audioPlayer.style.display = 'block';
+                    document.getElementById('downloadBtn').style.display = 'inline-block';
+
+                    showSuccess(`Music generated successfully! File: ${currentTrack.filename}`);
+                } else {
+                    showError(result.message || result.error || 'Failed to generate music');
+                }
+
+            } catch (error) {
+                log(`Exception occurred: ${error.message}`);
+                log(`Stack trace: ${error.stack}`);
+                showError(`Request failed: ${error.message}`);
+            } finally {
+                document.getElementById('generateBtn').disabled = false;
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function downloadMusic() {
+            if (currentTrack?.download_url) {
+                const downloadUrl = currentTrack.download_url.startsWith('http') 
+                    ? currentTrack.download_url 
+                    : `${API_BASE_URL}${currentTrack.download_url}`;
+                
+                log(`Initiating download from: ${downloadUrl}`);
+                
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = currentTrack.filename || 'generated_music.wav';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showSuccess('Download initiated!');
+            } else {
+                showError('No track available for download');
+            }
+        }
+
+        // Initialize
+        log('Simple Mode Test page loaded');
+        log(`API Base URL: ${API_BASE_URL}`);
+    </script>
+</body>
+</html>

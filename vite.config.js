@@ -5,17 +5,25 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:5002',
         changeOrigin: true,
         secure: false
       },
       '/health': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:5002',
         changeOrigin: true,
         secure: false
       }
     }
+  },
+  build: {
+    target: 'es2015',
+    sourcemap: true
+  },
+  define: {
+    global: 'globalThis',
   }
 })

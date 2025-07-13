@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .loading { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Frontend Debug Test</h1>
+    <div id="status">Checking frontend status...</div>
+    
+    <h2>Test Results:</h2>
+    <div id="results"></div>
+    
+    <h2>Links to Test:</h2>
+    <ul>
+        <li><a href="http://localhost:3000/" target="_blank">React App (Port 3000)</a></li>
+        <li><a href="http://localhost:5001/health" target="_blank">Backend Health Check</a></li>
+        <li><a href="http://localhost:3000/src/main.jsx" target="_blank">React Main.jsx (compiled)</a></li>
+    </ul>
+
+    <script>
+        function addResult(test, status, message) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${status}`;
+            div.innerHTML = `<strong>${test}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        async function runTests() {
+            // Test 1: Frontend availability
+            try {
+                const response = await fetch('http://localhost:3000/');
+                if (response.ok) {
+                    addResult('Frontend Server', 'success', 'Frontend is responding on port 3000');
+                } else {
+                    addResult('Frontend Server', 'error', `Frontend returned status: ${response.status}`);
+                }
+            } catch (error) {
+                addResult('Frontend Server', 'error', `Frontend not accessible: ${error.message}`);
+            }
+            
+            // Test 2: Backend connectivity  
+            try {
+                const response = await fetch('http://localhost:5001/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('Backend Health', 'success', `Backend is healthy: ${data.message}`);
+                } else {
+                    addResult('Backend Health', 'error', `Backend returned status: ${response.status}`);
+                }
+            } catch (error) {
+                addResult('Backend Health', 'error', `Backend not accessible: ${error.message}`);
+            }
+            
+            // Test 3: React App loading
+            try {
+                const response = await fetch('http://localhost:3000/src/main.jsx');
+                if (response.ok) {
+                    addResult('React Components', 'success', 'React components are being compiled and served');
+                } else {
+                    addResult('React Components', 'error', `React components not loading: ${response.status}`);
+                }
+            } catch (error) {
+                addResult('React Components', 'error', `React components error: ${error.message}`);
+            }
+        }
+        
+        // Run tests when page loads
+        window.onload = runTests;
+        
+        // Update status
+        document.getElementById('status').innerHTML = '<div class="status loading">Running diagnostic tests...</div>';
+    </script>
+</body>
+</html>

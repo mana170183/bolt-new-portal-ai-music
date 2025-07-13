@@ -61,45 +61,45 @@ class InstrumentSynthesizer:
         if drum_type == 'kick':
             # Low frequency thump with quick decay
             frequency = 60
-            signal = np.sin(2 * np.pi * frequency * t) + 0.5 * np.sin(2 * np.pi * frequency * 0.5 * t)
+            audio_signal = np.sin(2 * np.pi * frequency * t) + 0.5 * np.sin(2 * np.pi * frequency * 0.5 * t)
             envelope = np.exp(-8 * t)
             
         elif drum_type == 'snare':
             # High frequency noise with mid tone
             noise = np.random.normal(0, 0.3, len(t))
             tone = np.sin(2 * np.pi * 200 * t)
-            signal = 0.7 * noise + 0.3 * tone
+            audio_signal = 0.7 * noise + 0.3 * tone
             envelope = np.exp(-15 * t)
             
         elif drum_type == 'hihat':
             # High frequency noise
-            signal = np.random.normal(0, 0.2, len(t))
+            audio_signal = np.random.normal(0, 0.2, len(t))
             # High-pass filter
             sos = signal.butter(4, 8000, btype='high', fs=self.sample_rate, output='sos')
-            signal = signal.sosfilt(sos, signal)
+            audio_signal = signal.sosfilt(sos, audio_signal)
             envelope = np.exp(-25 * t)
             
         else:
             return np.zeros(len(t))
             
-        return signal * envelope * amplitude
+        return audio_signal * envelope * amplitude
     
     def generate_bass(self, frequency: float, duration: float, amplitude: float = 0.6) -> np.ndarray:
         """Generate bass guitar sound"""
         t = np.linspace(0, duration, int(self.sample_rate * duration), False)
         
         # Bass harmonics (emphasized fundamental)
-        signal = (np.sin(2 * np.pi * frequency * t) + 
+        audio_signal = (np.sin(2 * np.pi * frequency * t) + 
                  0.3 * np.sin(2 * np.pi * frequency * 2 * t) +
                  0.1 * np.sin(2 * np.pi * frequency * 3 * t))
         
         # Low-pass filter for bass character
         sos = signal.butter(4, 800, btype='low', fs=self.sample_rate, output='sos')
-        signal = signal.sosfilt(sos, signal)
+        audio_signal = signal.sosfilt(sos, audio_signal)
         
         # Bass envelope
         envelope = np.exp(-2 * t) * (1 - np.exp(-10 * t))
-        return signal * envelope * amplitude
+        return audio_signal * envelope * amplitude
     
     def generate_strings(self, frequency: float, duration: float, amplitude: float = 0.4) -> np.ndarray:
         """Generate string section sound"""
