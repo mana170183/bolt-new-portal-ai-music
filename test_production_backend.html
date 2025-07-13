@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Backend Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .status-bar { background: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .status-bar strong { color: #007bff; }
+        button { padding: 12px 24px; margin: 8px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result { margin: 15px 0; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; font-size: 12px; }
+        .success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        audio { width: 100%; margin: 10px 0; }
+        .loading { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .test-section { margin: 30px 0; padding: 20px; border: 1px solid #dee2e6; border-radius: 5px; }
+        .test-section h3 { margin-top: 0; color: #495057; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Portal AI Music - Production Backend Test</h1>
+        
+        <div class="status-bar">
+            <strong>Backend URL:</strong> https://backend-j5fong76w-managobindas-projects.vercel.app<br>
+            <strong>Database:</strong> Postgres (Connected)<br>
+            <strong>Environment:</strong> Production
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 System Health Tests</h3>
+            <button onclick="testHealth()">Health Check</button>
+            <button onclick="testDatabaseConnection()">Database Connection</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Metadata Tests</h3>
+            <button onclick="testGenres()">Get Genres</button>
+            <button onclick="testMoods()">Get Moods</button>
+            <button onclick="testInstruments()">Get Instruments</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🎵 Music Generation Tests</h3>
+            <button onclick="testGenerateMusic()">Generate Sample Music</button>
+            <button onclick="testAdvancedGeneration()">Advanced Generation</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Authentication Tests</h3>
+            <button onclick="testAuthToken()">Test Auth Token</button>
+            <button onclick="testUserQuota()">Get User Quota</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://backend-j5fong76w-managobindas-projects.vercel.app';
+        let authToken = null;
+
+        function addResult(title, content, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${title}</strong>\n${content}`;
+            results.appendChild(div);
+            // Scroll to bottom
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function addLoading(title) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result loading';
+            div.id = 'loading-' + Date.now();
+            div.innerHTML = `<strong>${title}</strong>\n⏳ Loading...`;
+            results.appendChild(div);
+            return div.id;
+        }
+
+        function updateResult(id, title, content, type = 'success') {
+            const div = document.getElementById(id);
+            if (div) {
+                div.className = `result ${type}`;
+                div.innerHTML = `<strong>${title}</strong>\n${content}`;
+            }
+        }
+
+        async function testHealth() {
+            const loadingId = addLoading('Health Check');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                updateResult(loadingId, '✅ Health Check', `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                updateResult(loadingId, '❌ Health Check Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDatabaseConnection() {
+            const loadingId = addLoading('Database Connection Test');
+            try {
+                const response = await fetch(`${API_BASE}/api/health/database`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateResult(loadingId, '✅ Database Connected', `Response: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    updateResult(loadingId, '⚠️ Database Status', `HTTP ${response.status}: Database endpoint not found (this is normal for some backends)`, 'info');
+                }
+            } catch (error) {
+                updateResult(loadingId, '❌ Database Connection Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGenres() {
+            const loadingId = addLoading('Fetching Genres');
+            try {
+                const response = await fetch(`${API_BASE}/api/genres`);
+                const data = await response.json();
+                if (data.genres && data.genres.length > 0) {
+                    const genreList = data.genres.slice(0, 5).map(g => `• ${g.name}: ${g.description}`).join('\n');
+                    updateResult(loadingId, '✅ Genres Retrieved', `Found ${data.genres.length} genres:\n\n${genreList}\n\n... and ${data.genres.length - 5} more`);
+                } else {
+                    updateResult(loadingId, '⚠️ No Genres Found', 'No genres data returned', 'info');
+                }
+            } catch (error) {
+                updateResult(loadingId, '❌ Genres Request Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMoods() {
+            const loadingId = addLoading('Fetching Moods');
+            try {
+                const response = await fetch(`${API_BASE}/api/moods`);
+                const data = await response.json();
+                if (data.moods && data.moods.length > 0) {
+                    const moodList = data.moods.slice(0, 5).map(m => `• ${m.name}: ${m.description}`).join('\n');
+                    updateResult(loadingId, '✅ Moods Retrieved', `Found ${data.moods.length} moods:\n\n${moodList}\n\n... and ${data.moods.length - 5} more`);
+                } else {
+                    updateResult(loadingId, '⚠️ No Moods Found', 'No moods data returned', 'info');
+                }
+            } catch (error) {
+                updateResult(loadingId, '❌ Moods Request Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInstruments() {
+            const loadingId = addLoading('Fetching Instruments');
+            try {
+                const response = await fetch(`${API_BASE}/api/instruments`);
+                const data = await response.json();
+                if (data.instruments && data.instruments.length > 0) {
+                    const instrumentList = data.instruments.slice(0, 8).map(i => `• ${i.name}`).join('\n');
+                    updateResult(loadingId, '✅ Instruments Retrieved', `Found ${data.instruments.length} instruments:\n\n${instrumentList}\n\n... and ${data.instruments.length - 8} more`);
+                } else {
+                    updateResult(loadingId, '⚠️ No Instruments Found', 'No instruments data returned', 'info');
+                }
+            } catch (error) {
+                updateResult(loadingId, '❌ Instruments Request Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAuthToken() {
+            const loadingId = addLoading('Testing Authentication');
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: 'test_user', plan: 'free' })
+                });
+                const data = await response.json();
+                if (data.success && data.token) {
+                    authToken = data.token;
+                    updateResult(loadingId, '✅ Authentication Success', `Token generated successfully\nUser: ${data.user_id}\nPlan: ${data.plan}`);
+                } else {
+                    updateResult(loadingId, '❌ Authentication Failed', `Response: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                updateResult(loadingId, '❌ Authentication Error', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUserQuota() {
+            const loadingId = addLoading('Fetching User Quota');
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/user/quota`, { headers });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    updateResult(loadingId, '✅ User Quota Retrieved', `Plan: ${data.quota.plan}\nDaily Limit: ${data.quota.daily_limit}\nRemaining: ${data.quota.remaining_today}`);
+                } else {
+                    updateResult(loadingId, '⚠️ Quota Info', `Response: ${JSON.stringify(data, null, 2)}`, 'info');
+                }
+            } catch (error) {
+                updateResult(loadingId, '❌ Quota Request Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGenerateMusic() {
+            const loadingId = addLoading('Generating Music (This may take 10-30 seconds)');
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/generate-music`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        prompt: 'happy upbeat electronic dance music',
+                        duration: 10,
+                        genre: 'electronic',
+                        mood: 'energetic'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success || data.status === 'success') {
+                    const track = data.track;
+                    updateResult(loadingId, '✅ Music Generated Successfully', `Title: ${track.title}\nDuration: ${track.duration}s\nGenre: ${track.genre}\nMood: ${track.mood}\nFile: ${track.url}`);
+                    
+                    // Add audio player if URL is available
+                    if (track.url) {
+                        const audioContainer = document.createElement('div');
+                        audioContainer.className = 'result success';
+                        audioContainer.innerHTML = `<strong>🎵 Generated Audio Player</strong>`;
+                        
+                        const audio = document.createElement('audio');
+                        audio.controls = true;
+                        audio.src = track.url.startsWith('http') ? track.url : `${API_BASE}${track.url}`;
+                        audioContainer.appendChild(audio);
+                        
+                        document.getElementById('results').appendChild(audioContainer);
+                    }
+                } else {
+                    updateResult(loadingId, '❌ Music Generation Failed', `Error: ${data.error || data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                updateResult(loadingId, '❌ Generation Request Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAdvancedGeneration() {
+            const loadingId = addLoading('Testing Advanced Music Generation');
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/generate-advanced-music`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        lyrics: 'La la la, happy song',
+                        mood: 'upbeat',
+                        genre: 'pop',
+                        instruments: ['piano', 'guitar'],
+                        tempo_bpm: 120,
+                        duration: 15,
+                        output_format: 'wav'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const track = data.track;
+                    updateResult(loadingId, '✅ Advanced Generation Success', `Title: ${track.title}\nInstruments: ${track.instruments?.join(', ') || 'N/A'}\nTempo: ${track.tempo_bpm || 'N/A'} BPM\nDuration: ${track.duration}s`);
+                } else {
+                    updateResult(loadingId, '❌ Advanced Generation Failed', `Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                updateResult(loadingId, '❌ Advanced Generation Request Failed', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run health check on page load
+        window.onload = function() {
+            addResult('🚀 Production Backend Test Started', 'Testing Portal AI Music backend deployment on Vercel.\nThis will test all major API endpoints and functionality.', 'info');
+            setTimeout(testHealth, 1000);
+        };
+    </script>
+</body>
+</html>

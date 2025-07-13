@@ -1,0 +1,12 @@
+{
+  "/api/moods/route": "app/api/moods/route.js",
+  "/studio/page": "app/studio/page.js",
+  "/api/health/route": "app/api/health/route.js",
+  "/page": "app/page.js",
+  "/api/genres/route": "app/api/genres/route.js",
+  "/api/composition-templates/route": "app/api/composition-templates/route.js",
+  "/api/instruments/route": "app/api/instruments/route.js",
+  "/api/generate-enhanced-music/route": "app/api/generate-enhanced-music/route.js",
+  "/api/user/quota/route": "app/api/user/quota/route.js",
+  "/api/generate-music/route": "app/api/generate-music/route.js"
+}

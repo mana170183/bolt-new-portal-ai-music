@@ -5,15 +5,23 @@
   "outputDirectory": "dist",
   "installCommand": "npm ci",
   "functions": {
-    "api/index.py": {
+    "api/*.py": {
       "maxDuration": 60,
       "memory": 512
     }
   },
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "src": "/api/health",
+      "dest": "/api/health.py"
+    },
+    {
+      "src": "/api/genres",
+      "dest": "/api/genres.py"
+    },
+    {
+      "src": "/api/generate-music",
+      "dest": "/api/generate-music.py"
     },
     {
       "src": "/(.*)",

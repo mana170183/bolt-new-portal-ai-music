@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test</title>
+</head>
+<body>
+    <h1>Simple HTML Test</h1>
+    <p>If you can see this, the server is working!</p>
+    <div id="test-result"></div>
+    
+    <script>
+        document.getElementById('test-result').innerHTML = 
+            '<p style="color: green;">✅ JavaScript is working!</p>';
+        
+        // Test fetch to backend
+        fetch('http://localhost:5001/health')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('test-result').innerHTML += 
+                    '<p style="color: green;">✅ Backend connection working!</p>';
+            })
+            .catch(error => {
+                document.getElementById('test-result').innerHTML += 
+                    '<p style="color: red;">❌ Backend connection failed: ' + error.message + '</p>';
+            });
+    </script>
+</body>
+</html>
