@@ -1,0 +1,2 @@
+# Core dependencies for API
+# No dependencies required for basic functionality
