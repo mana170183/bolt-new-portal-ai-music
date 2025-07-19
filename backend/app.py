@@ -13,125 +13,286 @@ import json
 import uuid
 from datetime import datetime
 
+# Azure Storage imports
+try:
+    from azure.storage.blob import BlobServiceClient, BlobClient
+    from azure.core.exceptions import ResourceNotFoundError
+    AZURE_STORAGE_AVAILABLE = True
+    print("🔗 Azure Storage SDK loaded successfully")
+except ImportError as e:
+    AZURE_STORAGE_AVAILABLE = False
+    print(f"⚠️ Azure Storage SDK not available: {e}")
+
 # Load environment variables
 load_dotenv()
 
+# Azure Storage Configuration
+AZURE_STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
+MUSIC_STORAGE_CONTAINER = os.getenv('MUSIC_STORAGE_CONTAINER', 'generated-music')
+TRAINING_DATA_CONTAINER = os.getenv('TRAINING_DATA_CONTAINER', 'training-data')
+
+# Initialize Azure Storage client
+if AZURE_STORAGE_AVAILABLE and AZURE_STORAGE_CONNECTION_STRING:
+    try:
+        blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+        print(f"✅ Azure Storage connected - Music: {MUSIC_STORAGE_CONTAINER}, Training: {TRAINING_DATA_CONTAINER}")
+    except Exception as e:
+        blob_service_client = None
+        print(f"❌ Azure Storage connection failed: {e}")
+else:
+    blob_service_client = None
+    print("⚠️ Azure Storage not configured")
+
 # Create output directory for generated audio
 AUDIO_OUTPUT_DIR = os.path.join(os.path.dirname(__file__), 'generated_audio')
-if not os.path.exists(AUDIO_OUTPUT_DIR):
-    os.makedirs(AUDIO_OUTPUT_DIR)
+try:
+    if not os.path.exists(AUDIO_OUTPUT_DIR):
+        os.makedirs(AUDIO_OUTPUT_DIR, mode=0o755)
+    # Ensure directory is writable
+    if not os.access(AUDIO_OUTPUT_DIR, os.W_OK):
+        # Try to create in /tmp if /app/generated_audio is not writable
+        AUDIO_OUTPUT_DIR = '/tmp/generated_audio'
+        if not os.path.exists(AUDIO_OUTPUT_DIR):
+            os.makedirs(AUDIO_OUTPUT_DIR, mode=0o755)
+    print(f"Using audio output directory: {AUDIO_OUTPUT_DIR}")
+except Exception as e:
+    print(f"Warning: Could not create audio output directory: {e}")
+    AUDIO_OUTPUT_DIR = '/tmp'
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('backend.log')
+        logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Azure Storage Helper Functions
+def upload_audio_to_storage(audio_data, filename, container_name=MUSIC_STORAGE_CONTAINER):
+    """Upload audio data to Azure Storage and return the blob URL"""
+    if not blob_service_client:
+        logger.warning("Azure Storage not available, saving locally only")
+        return None
+    
+    try:
+        blob_client = blob_service_client.get_blob_client(
+            container=container_name, 
+            blob=filename
+        )
+        
+        # Upload the audio data
+        blob_client.upload_blob(audio_data, overwrite=True)
+        
+        # Return the blob URL
+        blob_url = blob_client.url
+        logger.info(f"Audio uploaded to storage: {blob_url}")
+        return blob_url
+        
+    except Exception as e:
+        logger.error(f"Failed to upload audio to storage: {e}")
+        return None
+
+def save_audio_file(audio_data, filename, upload_to_storage=True):
+    """Save audio file to tmp and optionally to Azure Storage"""
+    # Use /tmp for local storage (always writable in containers)
+    local_path = os.path.join('/tmp', filename)
+    with open(local_path, 'wb') as f:
+        f.write(audio_data)
+    
+    # Upload to storage if enabled
+    storage_url = None
+    if upload_to_storage:
+        storage_url = upload_audio_to_storage(audio_data, filename)
+    
+    return {
+        'local_path': local_path,
+        'storage_url': storage_url,
+        'filename': filename
+    }
+
+def generate_enhanced_audio(duration=30, genre='pop', mood='upbeat'):
+    """
+    Generate enhanced, pleasant audio based on parameters
+    Improved algorithm to avoid buzzing sounds
+    """
+    try:
+        sample_rate = 44100
+        t = np.linspace(0, duration, int(sample_rate * duration), False)
+        
+        # Create musical chord progressions for different genres
+        genre_progressions = {
+            'pop': [(261.63, 329.63, 392.00), (246.94, 311.13, 369.99), (293.66, 369.99, 440.00), (261.63, 329.63, 392.00)],
+            'rock': [(196.00, 246.94, 293.66), (220.00, 277.18, 329.63), (246.94, 311.13, 369.99), (196.00, 246.94, 293.66)],
+            'jazz': [(220.00, 277.18, 329.63), (246.94, 311.13, 369.99), (261.63, 329.63, 392.00), (196.00, 246.94, 293.66)],
+            'classical': [(261.63, 329.63, 392.00), (293.66, 369.99, 440.00), (329.63, 415.30, 493.88), (261.63, 329.63, 392.00)],
+            'electronic': [(130.81, 196.00, 261.63), (164.81, 246.94, 329.63), (196.00, 293.66, 392.00), (130.81, 196.00, 261.63)],
+            'hip-hop': [(82.41, 110.00, 146.83), (98.00, 130.81, 174.61), (110.00, 146.83, 196.00), (82.41, 110.00, 146.83)],
+            'ambient': [(174.61, 220.00, 261.63), (196.00, 246.94, 293.66), (220.00, 277.18, 329.63), (174.61, 220.00, 261.63)],
+            'cinematic': [(196.00, 261.63, 329.63), (220.00, 293.66, 369.99), (246.94, 329.63, 415.30), (196.00, 261.63, 329.63)],
+        }
+        
+        # Improved mood parameters
+        mood_params = {
+            'uplifting': {'attack': 0.1, 'decay': 0.3, 'sustain': 0.7, 'release': 0.4, 'brightness': 1.2, 'volume': 0.7},
+            'calm': {'attack': 0.2, 'decay': 0.5, 'sustain': 0.6, 'release': 0.8, 'brightness': 0.8, 'volume': 0.4},
+            'energetic': {'attack': 0.05, 'decay': 0.2, 'sustain': 0.8, 'release': 0.3, 'brightness': 1.3, 'volume': 0.8},
+            'dramatic': {'attack': 0.15, 'decay': 0.4, 'sustain': 0.9, 'release': 0.6, 'brightness': 1.1, 'volume': 0.9},
+            'upbeat': {'attack': 0.08, 'decay': 0.25, 'sustain': 0.75, 'release': 0.35, 'brightness': 1.25, 'volume': 0.75},
+        }
+        
+        # Get progression and parameters
+        progression = genre_progressions.get(genre, genre_progressions['pop'])
+        params = mood_params.get(mood, mood_params['upbeat'])
+        
+        # Generate audio with improved algorithm
+        audio = np.zeros_like(t)
+        chord_duration = duration / len(progression)
+        
+        for chord_idx, chord in enumerate(progression):
+            chord_start = chord_idx * chord_duration
+            chord_end = (chord_idx + 1) * chord_duration
+            
+            # Time mask for this chord
+            chord_mask = (t >= chord_start) & (t < chord_end)
+            chord_t = t[chord_mask] - chord_start
+            
+            if len(chord_t) > 0:
+                # Generate ADSR envelope
+                envelope = generate_adsr_envelope(chord_t, chord_duration, params)
+                
+                # Generate chord harmonics
+                chord_audio = np.zeros_like(chord_t)
+                for i, freq in enumerate(chord):
+                    # Add multiple harmonics for richer sound
+                    for harmonic in range(1, 4):
+                        harmonic_freq = freq * harmonic * params['brightness']
+                        if harmonic_freq < sample_rate / 2:  # Avoid aliasing
+                            amplitude = (0.7 ** (harmonic - 1)) * (0.8 ** i)
+                            wave = np.sin(2 * np.pi * harmonic_freq * chord_t)
+                            chord_audio += wave * amplitude
+                
+                # Apply envelope and add to main audio
+                audio[chord_mask] += chord_audio * envelope
+        
+        # Apply final volume and normalization
+        audio *= params['volume']
+        
+        # Smooth normalization to prevent clipping
+        if np.max(np.abs(audio)) > 0:
+            audio = audio / np.max(np.abs(audio)) * 0.7
+        
+        # Apply gentle filtering to reduce harshness
+        audio = apply_gentle_filter(audio, sample_rate)
+        
+        return audio
+    
+    except Exception as e:
+        print(f"Audio generation error: {e}", file=sys.stderr)
+        # Fallback to simple tone
+        sample_rate = 44100
+        t = np.linspace(0, duration, int(sample_rate * duration), False)
+        frequency = 440.0  # A4 note
+        audio = 0.3 * np.sin(2 * np.pi * frequency * t)
+        return audio
+    
+    for chord_idx, chord in enumerate(progression):
+        chord_start = chord_idx * chord_duration
+        chord_end = (chord_idx + 1) * chord_duration
+        
+        # Time mask for this chord
+        chord_mask = (t >= chord_start) & (t < chord_end)
+        chord_t = t[chord_mask] - chord_start
+        
+        if len(chord_t) > 0:
+            # Generate ADSR envelope
+            envelope = generate_adsr_envelope(chord_t, chord_duration, params)
+            
+            # Generate chord harmonics
+            chord_audio = np.zeros_like(chord_t)
+            for i, freq in enumerate(chord):
+                # Add multiple harmonics for richer sound
+                for harmonic in range(1, 4):
+                    harmonic_freq = freq * harmonic * params['brightness']
+                    if harmonic_freq < sample_rate / 2:  # Avoid aliasing
+                        amplitude = (0.7 ** (harmonic - 1)) * (0.8 ** i)
+                        wave = np.sin(2 * np.pi * harmonic_freq * chord_t)
+                        chord_audio += wave * amplitude
+            
+            # Apply envelope and add to main audio
+            audio[chord_mask] += chord_audio * envelope
+    
+    # Apply final volume and normalization
+    audio *= params['volume']
+    
+    # Smooth normalization to prevent clipping
+    if np.max(np.abs(audio)) > 0:
+        audio = audio / np.max(np.abs(audio)) * 0.7
+    
+    # Apply gentle filtering to reduce harshness
+    audio = apply_gentle_filter(audio, sample_rate)
+    
+    return audio
+
+def generate_adsr_envelope(t, duration, params):
+    """Generate ADSR (Attack, Decay, Sustain, Release) envelope"""
+    attack_time = duration * params['attack']
+    decay_time = duration * params['decay']
+    sustain_level = params['sustain']
+    release_time = duration * params['release']
+    
+    envelope = np.ones_like(t)
+    
+    for i, time in enumerate(t):
+        if time < attack_time:
+            # Attack phase
+            envelope[i] = time / attack_time
+        elif time < attack_time + decay_time:
+            # Decay phase
+            decay_progress = (time - attack_time) / decay_time
+            envelope[i] = 1.0 - (1.0 - sustain_level) * decay_progress
+        elif time < duration - release_time:
+            # Sustain phase
+            envelope[i] = sustain_level
+        else:
+            # Release phase
+            release_progress = (time - (duration - release_time)) / release_time
+            envelope[i] = sustain_level * (1.0 - release_progress)
+    
+    return envelope
+
+def apply_gentle_filter(audio, sample_rate):
+    """Apply gentle low-pass filter to reduce harshness"""
+    # Simple moving average filter
+    window_size = int(sample_rate * 0.0001)  # 0.1ms window
+    if window_size > 1:
+        kernel = np.ones(window_size) / window_size
+        audio = np.convolve(audio, kernel, mode='same')
+    
+    return audio
 
 def generate_simple_audio(duration=30, genre='pop', mood='upbeat'):
     """
     Generate simple audio based on parameters
     This is a basic implementation - in production, you'd use advanced AI models
     """
-    sample_rate = 44100
-    t = np.linspace(0, duration, int(sample_rate * duration), False)
-    
-    # Create base frequencies based on genre
-    genre_freqs = {
-        'pop': [261.63, 329.63, 392.00, 523.25],
-        'rock': [196.00, 246.94, 293.66, 392.00],
-        'jazz': [220.00, 277.18, 329.63, 440.00],
-        'classical': [261.63, 293.66, 329.63, 392.00],
-        'electronic': [130.81, 196.00, 261.63, 392.00],
-        'hip-hop': [82.41, 110.00, 146.83, 196.00],
-        'ambient': [174.61, 220.00, 261.63, 329.63],
-        'cinematic': [196.00, 261.63, 329.63, 415.30],
-        'corporate': [261.63, 329.63, 392.00, 493.88],
-        'folk': [196.00, 246.94, 293.66, 349.23],
-        'indie': [220.00, 261.63, 329.63, 440.00],
-        'world': [185.00, 233.08, 277.18, 369.99],
-        'rnb': [98.00, 130.81, 164.81, 220.00],
-        'country': [196.00, 246.94, 293.66, 349.23],
-        'blues': [164.81, 207.65, 261.63, 329.63],
-        'reggae': [146.83, 196.00, 246.94, 293.66],
-        'funk': [82.41, 110.00, 146.83, 196.00],
-        'metal': [130.81, 174.61, 220.00, 293.66],
-        'trap': [65.41, 87.31, 110.00, 146.83],
-        'house': [130.81, 164.81, 196.00, 261.63],
-        'techno': [110.00, 146.83, 196.00, 261.63],
-        'dubstep': [65.41, 98.00, 130.81, 196.00],
-        'gospel': [196.00, 261.63, 329.63, 392.00],
-        'latin': [174.61, 220.00, 277.18, 349.23],
-        'k-pop': [196.00, 261.63, 329.63, 415.30],
-        'lo-fi': [130.81, 164.81, 207.65, 261.63],
-        'afrobeats': [110.00, 146.83, 196.00, 246.94],
-        'drill': [73.42, 98.00, 130.81, 174.61],
-        'synthwave': [164.81, 207.65, 261.63, 329.63],
-        'trance': [130.81, 164.81, 207.65, 261.63],
-        'drum_bass': [82.41, 110.00, 146.83, 196.00],
-        'bossa_nova': [196.00, 246.94, 293.66, 369.99],
-        'punk': [164.81, 220.00, 293.66, 392.00],
-    }
-    
-    mood_adjustments = {
-        'uplifting': {'volume': 0.7, 'brightness': 1.2},
-        'calm': {'volume': 0.4, 'brightness': 0.8},
-        'energetic': {'volume': 0.8, 'brightness': 1.3},
-        'dramatic': {'volume': 0.9, 'brightness': 1.1},
-        'mysterious': {'volume': 0.5, 'brightness': 0.7},
-        'romantic': {'volume': 0.6, 'brightness': 0.9},
-        'melancholic': {'volume': 0.5, 'brightness': 0.6},
-        'triumphant': {'volume': 0.9, 'brightness': 1.4},
-        'playful': {'volume': 0.7, 'brightness': 1.3},
-        'suspenseful': {'volume': 0.6, 'brightness': 0.8},
-        'nostalgic': {'volume': 0.5, 'brightness': 0.8},
-        'meditative': {'volume': 0.3, 'brightness': 0.7},
-        'aggressive': {'volume': 1.0, 'brightness': 1.5},
-        'groovy': {'volume': 0.8, 'brightness': 1.2},
-        'dreamy': {'volume': 0.4, 'brightness': 0.6},
-        'confident': {'volume': 0.9, 'brightness': 1.3},
-        'anxious': {'volume': 0.7, 'brightness': 0.9},
-        'euphoric': {'volume': 0.9, 'brightness': 1.4},
-        'introspective': {'volume': 0.4, 'brightness': 0.7},
-        'rebellious': {'volume': 0.9, 'brightness': 1.3},
-        'seductive': {'volume': 0.6, 'brightness': 0.8},
-        'powerful': {'volume': 1.0, 'brightness': 1.4},
-        'laid_back': {'volume': 0.5, 'brightness': 0.8},
-        'professional': {'volume': 0.6, 'brightness': 1.0},
-        'adventurous': {'volume': 0.8, 'brightness': 1.2},
-        'sophisticated': {'volume': 0.6, 'brightness': 0.9}
-    }
-    
-    freqs = genre_freqs.get(genre, genre_freqs['pop'])
-    adjustments = mood_adjustments.get(mood, {'volume': 0.6, 'brightness': 1.0})
-    
-    audio = np.zeros_like(t)
-    for i, freq in enumerate(freqs):
-        envelope = np.exp(-t * 0.1) * (1 - t / duration)
-        harmonic = np.sin(2 * np.pi * freq * t * adjustments['brightness']) * envelope
-        audio += harmonic * (0.8 ** i)
-    
-    audio *= adjustments['volume']
-    
-    if np.max(np.abs(audio)) > 0:
-        audio = audio / np.max(np.abs(audio)) * 0.8
-    
-    return audio
+    # Use enhanced algorithm instead of the old buzzing one
+    return generate_enhanced_audio(duration, genre, mood)
 
 # Import enhanced generator if available
+ENHANCED_GENERATOR_AVAILABLE = False
+enhanced_generator = None
+
 try:
     from enhanced_main_generator import EnhancedMultiInstrumentalGenerator
-    ENHANCED_GENERATOR_AVAILABLE = True
     enhanced_generator = EnhancedMultiInstrumentalGenerator()
+    ENHANCED_GENERATOR_AVAILABLE = True
     print("🎼 Enhanced Multi-Instrumental Generator imported successfully")
 except ImportError as e:
+    print(f"⚠️  Enhanced generator not available: {e}")
     ENHANCED_GENERATOR_AVAILABLE = False
     enhanced_generator = None
-    print(f"⚠️  Enhanced generator not available: {e}")
 
 try:
     from advanced_music_generator import AdvancedMultiInstrumentalGenerator
@@ -140,6 +301,9 @@ try:
         ENHANCED_GENERATOR_AVAILABLE = True
         print("🎼 Advanced Multi-Instrumental Generator loaded")
 except ImportError:
+    pass
+
+if not ENHANCED_GENERATOR_AVAILABLE:
     print("🔄 Using basic procedural music generation")
 
 app = Flask(__name__)
@@ -148,7 +312,8 @@ frontend_urls = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8080",
-    "http://127.0.0.1:8080"
+    "http://127.0.0.1:8080",
+    "https://frontend-containerapp-dev.ambitiousmeadow-4c2dba6f.uksouth.azurecontainerapps.io"
 ]
 
 CORS(app, origins=frontend_urls, supports_credentials=True)
@@ -160,12 +325,40 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+@app.route('/', methods=['GET'])
+def root():
+    return jsonify({
+        "name": "AI Music Portal Backend",
+        "version": "1.0.0",
+        "status": "running",
+        "endpoints": {
+            "health": "/health",
+            "api_health": "/api/health",
+            "api_docs": "/api/",
+            "generate_music": "/api/generate-music",
+            "genres": "/api/genres",
+            "moods": "/api/moods",
+            "instruments": "/api/instruments"
+        },
+        "message": "Welcome to AI Music Portal Backend API"
+    })
+
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({
         "status": "healthy",
         "message": "AI Music Portal Backend is running",
         "enhanced_generator": ENHANCED_GENERATOR_AVAILABLE
+    })
+
+@app.route('/api/health', methods=['GET'])
+def api_health_check():
+    return jsonify({
+        "status": "healthy",
+        "message": "AI Music Portal Backend is running",
+        "enhanced_generator": ENHANCED_GENERATOR_AVAILABLE,
+        "database_available": False,
+        "timestamp": datetime.now().isoformat()
     })
 
 @app.route('/api/genres', methods=['GET'])
@@ -550,10 +743,10 @@ def get_composition_templates():
 @app.route('/api/generate-music', methods=['POST'])
 def generate_music():
     try:
-        print("Generate music request received", file=sys.stderr)
+        print("🎵 Generate music request received", file=sys.stderr)
         data = request.get_json()
         if not data:
-            print("No data provided in request", file=sys.stderr)
+            print("❌ No data provided in request", file=sys.stderr)
             return jsonify({
                 "success": False,
                 "error": "No data provided"
@@ -564,48 +757,98 @@ def generate_music():
         genre = data.get('genre', 'pop')
         mood = data.get('mood', 'upbeat')
         
-        print(f"Simple params: prompt='{prompt}', duration={duration}, genre={genre}, mood={mood}", file=sys.stderr)
+        # Validate parameters
+        if not isinstance(duration, (int, float)) or duration <= 0 or duration > 300:
+            return jsonify({
+                "success": False,
+                "error": "Duration must be a positive number between 1 and 300 seconds"
+            }), 400
         
-        audio_data = generate_simple_audio(
-            duration=duration,
-            genre=genre,
-            mood=mood
-        )
+        # Ensure duration is reasonable for testing
+        if duration > 60:
+            duration = 60  # Limit to 60 seconds for testing
+            
+        # Validate genre
+        valid_genres = ['pop', 'rock', 'jazz', 'classical', 'electronic', 'hip-hop', 'ambient', 'cinematic', 'corporate', 'folk', 'indie', 'world', 'rnb', 'country', 'blues', 'reggae', 'funk', 'metal', 'trap', 'house', 'techno', 'dubstep', 'gospel', 'latin', 'k-pop', 'lo-fi', 'afrobeats', 'drill', 'synthwave', 'trance', 'drum_bass', 'bossa_nova', 'punk']
+        if genre not in valid_genres:
+            genre = 'pop'  # Default to pop for unknown genres
+            
+        # Validate mood
+        valid_moods = ['uplifting', 'calm', 'energetic', 'dramatic', 'upbeat', 'mysterious', 'romantic', 'melancholic', 'triumphant', 'playful', 'suspenseful', 'nostalgic', 'meditative', 'aggressive', 'groovy', 'dreamy', 'confident', 'anxious', 'euphoric', 'introspective', 'rebellious', 'seductive', 'powerful', 'laid_back', 'professional', 'adventurous', 'sophisticated']
+        if mood not in valid_moods:
+            mood = 'upbeat'  # Default to upbeat for unknown moods
+        
+        print(f"🎼 Generating music: prompt='{prompt}', duration={duration}, genre={genre}, mood={mood}", file=sys.stderr)
+        
+        # Generate audio data
+        try:
+            audio_data = generate_simple_audio(
+                duration=duration,
+                genre=genre,
+                mood=mood
+            )
+            print(f"✅ Audio generation completed, shape: {audio_data.shape}", file=sys.stderr)
+        except Exception as audio_error:
+            print(f"❌ Audio generation failed: {audio_error}", file=sys.stderr)
+            raise audio_error
         
         filename = f"music_{uuid.uuid4().hex[:8]}.wav"
-        filepath = os.path.join(AUDIO_OUTPUT_DIR, filename)
         
-        if audio_data.dtype != np.int16:
-            audio_data_int16 = (audio_data * 32767).astype(np.int16)
-        else:
-            audio_data_int16 = audio_data
+        # Convert audio data to WAV format
+        try:
+            if audio_data.dtype != np.int16:
+                # Normalize and convert to int16
+                audio_normalized = np.clip(audio_data, -1.0, 1.0)
+                audio_data_int16 = (audio_normalized * 32767).astype(np.int16)
+            else:
+                audio_data_int16 = audio_data
             
-        write(filepath, 44100, audio_data_int16)
+            # Create WAV file in memory
+            wav_buffer = io.BytesIO()
+            write(wav_buffer, 44100, audio_data_int16)
+            wav_data = wav_buffer.getvalue()
+            wav_buffer.close()
+            
+            print(f"✅ WAV conversion completed, size: {len(wav_data)} bytes", file=sys.stderr)
+        except Exception as wav_error:
+            print(f"❌ WAV conversion failed: {wav_error}", file=sys.stderr)
+            raise wav_error
+        
+        # Save file locally and to Azure Storage
+        try:
+            file_info = save_audio_file(wav_data, filename, upload_to_storage=True)
+            print(f"✅ File saved: {file_info}", file=sys.stderr)
+        except Exception as save_error:
+            print(f"❌ File save failed: {save_error}", file=sys.stderr)
+            # Continue even if save fails, return the audio data
+            file_info = {'local_path': None, 'storage_url': None, 'filename': filename}
         
         response_data = {
             "success": True,
             "message": "Music generated successfully",
             "audio_file": filename,
             "download_url": f"/api/download/{filename}",
+            "storage_url": file_info.get('storage_url'),
             "metadata": {
                 "prompt": prompt,
                 "duration": duration,
                 "genre": genre,
                 "mood": mood,
                 "filename": filename,
-                "sample_rate": 44100
+                "sample_rate": 44100,
+                "storage_available": blob_service_client is not None
             }
         }
         
-        print(f"Music generated successfully: {filename}", file=sys.stderr)
+        print(f"✅ Music generated successfully: {filename}", file=sys.stderr)
         return jsonify(response_data)
         
     except Exception as e:
-        print(f"Generate music error: {str(e)}", file=sys.stderr)
+        print(f"❌ Generate music error: {str(e)}", file=sys.stderr)
         traceback.print_exc()
         return jsonify({
             "success": False,
-            "error": str(e)
+            "error": f"Music generation failed: {str(e)}"
         }), 500
 
 @app.route('/api/advanced-generate', methods=['POST'])
@@ -724,7 +967,11 @@ def generate_enhanced_music():
 @app.route('/api/download/<filename>', methods=['GET'])
 def download_file(filename):
     try:
-        filepath = os.path.join(AUDIO_OUTPUT_DIR, filename)
+        # Check both /tmp and AUDIO_OUTPUT_DIR for the file
+        filepath = os.path.join('/tmp', filename)
+        if not os.path.exists(filepath):
+            filepath = os.path.join(AUDIO_OUTPUT_DIR, filename)
+        
         if os.path.exists(filepath):
             return send_file(filepath, as_attachment=True)
         else:
@@ -742,7 +989,10 @@ def download_file(filename):
 @app.route('/api/download-audio/<filename>', methods=['GET'])
 def download_audio_file(filename):
     try:
-        filepath = os.path.join(AUDIO_OUTPUT_DIR, filename)
+        # Check both /tmp and AUDIO_OUTPUT_DIR for the file
+        filepath = os.path.join('/tmp', filename)
+        if not os.path.exists(filepath):
+            filepath = os.path.join(AUDIO_OUTPUT_DIR, filename)
         if os.path.exists(filepath):
             return send_file(filepath, as_attachment=True)
         else:
@@ -838,11 +1088,23 @@ def get_user_quota():
             'error': 'Failed to check user quota'
         }), 500
 
+# Data collection integration
+try:
+    from data_collection_integration import register_data_collection_routes
+    register_data_collection_routes(app)
+    logger.info("Data collection routes registered successfully")
+except ImportError as e:
+    logger.warning(f"Data collection integration not available: {e}")
+except Exception as e:
+    logger.error(f"Error registering data collection routes: {e}")
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5002))
+    port = int(os.environ.get('PORT', 8000))
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     print(f"🚀 Starting Flask server on port {port}...")
     print(f"📍 Health check available at: http://localhost:{port}/health")
     print(f"📡 API endpoints available at: http://localhost:{port}/api/")
     print(f"🔧 CORS enabled for: {', '.join(frontend_urls)}")
+    print(f"🐛 Debug mode: {debug_mode}")
     
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
