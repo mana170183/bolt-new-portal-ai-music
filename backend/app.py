@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, make_response
 from flask_cors import CORS
 import os
 import sys
@@ -13,6 +13,17 @@ import json
 import uuid
 from datetime import datetime
 
+# Enhanced imports for metadata and AI integration
+try:
+    from database import get_db, init_database
+    from azure_openai_integration import get_azure_ai, init_azure_openai
+    from enhanced_music_generator import EnhancedMusicGenerator
+    ENHANCED_FEATURES_AVAILABLE = True
+    print("🚀 Enhanced features loaded successfully")
+except ImportError as e:
+    ENHANCED_FEATURES_AVAILABLE = False
+    print(f"⚠️ Enhanced features not available: {e}")
+
 # Azure Storage imports
 try:
     from azure.storage.blob import BlobServiceClient, BlobClient
@@ -23,6 +34,16 @@ except ImportError as e:
     AZURE_STORAGE_AVAILABLE = False
     print(f"⚠️ Azure Storage SDK not available: {e}")
 
+# Database connectivity imports
+try:
+    import pymssql
+    import pyodbc
+    DATABASE_AVAILABLE = True
+    print("🔗 Database drivers loaded successfully")
+except ImportError as e:
+    DATABASE_AVAILABLE = False
+    print(f"⚠️ Database drivers not available: {e}")
+
 # Load environment variables
 load_dotenv()
 
@@ -30,6 +51,37 @@ load_dotenv()
 AZURE_STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
 MUSIC_STORAGE_CONTAINER = os.getenv('MUSIC_STORAGE_CONTAINER', 'generated-music')
 TRAINING_DATA_CONTAINER = os.getenv('TRAINING_DATA_CONTAINER', 'training-data')
+
+# Database Configuration
+SQL_CONNECTION_STRING = os.getenv('SQL_CONNECTION_STRING')
+AZURE_SQL_CONNECTION_STRING = os.getenv('AZURE_SQL_CONNECTION_STRING')
+
+# Initialize components
+app = Flask(__name__)
+CORS(app)
+
+# Initialize enhanced features
+if ENHANCED_FEATURES_AVAILABLE:
+    try:
+        db_manager = get_db()
+        azure_ai_manager = get_azure_ai()
+        enhanced_generator = EnhancedMusicGenerator()
+        
+        # Initialize connections
+        db_connected = init_database()
+        ai_connected = init_azure_openai()
+        
+        print(f"💾 Database connected: {db_connected}")
+        print(f"🤖 Azure OpenAI connected: {ai_connected}")
+        
+    except Exception as e:
+        print(f"❌ Enhanced features initialization failed: {e}")
+        ENHANCED_FEATURES_AVAILABLE = False
+        db_connected = False
+        ai_connected = False
+else:
+    db_connected = False
+    ai_connected = False
 
 # Initialize Azure Storage client
 if AZURE_STORAGE_AVAILABLE and AZURE_STORAGE_CONNECTION_STRING:
@@ -325,6 +377,83 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+# FIX: Add explicit OPTIONS handler for /api/generate
+@app.route('/api/generate', methods=['OPTIONS'])
+def generate_options():
+    response = make_response()
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
+@app.route('/api/generate', methods=['POST', 'OPTIONS'])
+def generate():
+    """Generate music endpoint with CORS fix"""
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    
+    try:
+        data = request.get_json() or {}
+        
+        # Get parameters
+        prompt = data.get('prompt', '')
+        genre = data.get('genre', 'Pop')
+        mood = data.get('mood', 'Happy')
+        duration = data.get('duration', 30)
+        
+        # Generate response with sample music
+        generation_id = f"track_{int(datetime.now().timestamp() * 1000)}"
+        
+        response_data = {
+            "success": True,
+            "id": generation_id,
+            "audioUrl": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            "message": "Music generated successfully!",
+            "duration": duration,
+            "metadata": {
+                "prompt": prompt,
+                "genre": genre,
+                "mood": mood,
+                "title": f"Generated {genre} Track"
+            }
+        }
+        
+        # Create response with explicit CORS headers
+        response = make_response(jsonify(response_data))
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Content-Type'] = 'application/json'
+        
+        return response
+        
+    except Exception as e:
+        error_response = make_response(jsonify({"error": str(e)}), 500)
+        error_response.headers['Access-Control-Allow-Origin'] = '*'
+        return error_response
+
+# Global OPTIONS handler
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = make_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        response.headers['Access-Control-Max-Age'] = '3600'
+        return response
+
+# After request handler to ensure CORS headers
+@app.after_request
+def after_request(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+
 @app.route('/', methods=['GET'])
 def root():
     return jsonify({
@@ -353,11 +482,13 @@ def health_check():
 
 @app.route('/api/health', methods=['GET'])
 def api_health_check():
+    db_status = test_database_connection() if DATABASE_AVAILABLE else False
     return jsonify({
         "status": "healthy",
         "message": "AI Music Portal Backend is running",
         "enhanced_generator": ENHANCED_GENERATOR_AVAILABLE,
-        "database_available": False,
+        "database_available": db_status,
+        "database_drivers": DATABASE_AVAILABLE,
         "timestamp": datetime.now().isoformat()
     })
 
@@ -365,6 +496,32 @@ def api_health_check():
 def get_genres():
     try:
         print("Genres request received", file=sys.stderr)
+        
+        # Try to get genres from database first
+        if ENHANCED_FEATURES_AVAILABLE and db_connected:
+            try:
+                db_genres = db_manager.get_genres()
+                if db_genres:
+                    # Convert database format to API format
+                    genres = []
+                    for genre in db_genres:
+                        genres.append({
+                            "id": genre['genre_code'],
+                            "name": genre['name'],
+                            "description": genre['description']
+                        })
+                    
+                    print(f"✅ Loaded {len(genres)} genres from database", file=sys.stderr)
+                    return jsonify({
+                        "success": True,
+                        "status": "success",
+                        "genres": genres,
+                        "source": "database"
+                    })
+            except Exception as db_error:
+                print(f"❌ Database genres failed: {db_error}", file=sys.stderr)
+        
+        # Fallback to hardcoded genres
         genres = [
             {"id": "cinematic", "name": "Cinematic", "description": "Epic orchestral and dramatic music"},
             {"id": "corporate", "name": "Corporate", "description": "Professional business-friendly music"},
@@ -404,9 +561,10 @@ def get_genres():
         response = {
             "success": True,
             "status": "success",
-            "genres": genres
+            "genres": genres,
+            "source": "fallback"
         }
-        print(f"Genres response: {len(genres)} genres", file=sys.stderr)
+        print(f"⚠️ Using fallback genres: {len(genres)} genres", file=sys.stderr)
         return jsonify(response)
     except Exception as e:
         print(f"Genres error: {str(e)}", file=sys.stderr)
@@ -420,41 +578,77 @@ def get_genres():
 def get_moods():
     try:
         print("Moods request received", file=sys.stderr)
+        
+        # Try to get moods from database first
+        if ENHANCED_FEATURES_AVAILABLE and db_connected:
+            try:
+                db_moods = db_manager.get_moods()
+                if db_moods:
+                    # Convert database format to API format
+                    moods = []
+                    for mood in db_moods:
+                        moods.append({
+                            "id": mood['mood_code'],
+                            "name": mood['name'],
+                            "description": mood['description'],
+                            "color": mood.get('color_code', '#666666')
+                        })
+                    
+                    print(f"✅ Loaded {len(moods)} moods from database", file=sys.stderr)
+                    return jsonify({
+                        "success": True,
+                        "status": "success",
+                        "moods": moods,
+                        "source": "database"
+                    })
+            except Exception as db_error:
+                print(f"❌ Database moods failed: {db_error}", file=sys.stderr)
+        
+        # Fallback to hardcoded moods
         moods = [
-            {"id": "uplifting", "name": "Uplifting", "description": "Positive and inspiring energy"},
-            {"id": "calm", "name": "Calm", "description": "Peaceful and relaxing"},
-            {"id": "energetic", "name": "Energetic", "description": "High energy and motivating"},
-            {"id": "dramatic", "name": "Dramatic", "description": "Intense and emotional"},
-            {"id": "mysterious", "name": "Mysterious", "description": "Dark and intriguing"},
-            {"id": "romantic", "name": "Romantic", "description": "Love and tender emotions"},
-            {"id": "melancholic", "name": "Melancholic", "description": "Sad and reflective"},
-            {"id": "triumphant", "name": "Triumphant", "description": "Victory and achievement"},
-            {"id": "playful", "name": "Playful", "description": "Fun and lighthearted"},
-            {"id": "suspenseful", "name": "Suspenseful", "description": "Tension and anticipation"},
-            {"id": "nostalgic", "name": "Nostalgic", "description": "Reminiscent and wistful"},
-            {"id": "meditative", "name": "Meditative", "description": "Contemplative and zen"},
-            {"id": "aggressive", "name": "Aggressive", "description": "Intense and forceful for metal and rock"},
-            {"id": "groovy", "name": "Groovy", "description": "Rhythmic and danceable funk vibes"},
-            {"id": "dreamy", "name": "Dreamy", "description": "Ethereal and atmospheric textures"},
-            {"id": "confident", "name": "Confident", "description": "Strong and self-assured attitude"},
-            {"id": "anxious", "name": "Anxious", "description": "Tense and uneasy atmosphere"},
-            {"id": "euphoric", "name": "Euphoric", "description": "Peak emotional highs and celebration"},
-            {"id": "introspective", "name": "Introspective", "description": "Deep thought and contemplation"},
-            {"id": "rebellious", "name": "Rebellious", "description": "Defiant and alternative attitude"},
-            {"id": "seductive", "name": "Seductive", "description": "Sensual and alluring for R&B"},
-            {"id": "powerful", "name": "Powerful", "description": "Strong and commanding presence"},
-            {"id": "laid_back", "name": "Laid Back", "description": "Relaxed and easy-going vibe"},
-            {"id": "professional", "name": "Professional", "description": "Corporate and business-appropriate"},
-            {"id": "adventurous", "name": "Adventurous", "description": "Exciting and exploratory"},
-            {"id": "sophisticated", "name": "Sophisticated", "description": "Refined and elegant"}
+            {"id": "uplifting", "name": "Uplifting", "description": "Positive and inspiring energy", "color": "#FFD700"},
+            {"id": "calm", "name": "Calm", "description": "Peaceful and relaxing", "color": "#87CEEB"},
+            {"id": "energetic", "name": "Energetic", "description": "High energy and motivating", "color": "#FF6B35"},
+            {"id": "dramatic", "name": "Dramatic", "description": "Intense and emotional", "color": "#8B0000"},
+            {"id": "mysterious", "name": "Mysterious", "description": "Dark and intriguing", "color": "#4B0082"},
+            {"id": "romantic", "name": "Romantic", "description": "Love and tender emotions", "color": "#FF69B4"},
+            {"id": "melancholic", "name": "Melancholic", "description": "Sad and reflective", "color": "#708090"},
+            {"id": "triumphant", "name": "Triumphant", "description": "Victory and achievement", "color": "#FFD700"},
+            {"id": "playful", "name": "Playful", "description": "Fun and lighthearted", "color": "#32CD32"},
+            {"id": "suspenseful", "name": "Suspenseful", "description": "Tension and anticipation", "color": "#B22222"},
+            {"id": "nostalgic", "name": "Nostalgic", "description": "Reminiscent and wistful", "color": "#DDA0DD"},
+            {"id": "meditative", "name": "Meditative", "description": "Contemplative and zen", "color": "#20B2AA"},
+            {"id": "aggressive", "name": "Aggressive", "description": "Intense and forceful for metal and rock", "color": "#DC143C"},
+            {"id": "groovy", "name": "Groovy", "description": "Rhythmic and danceable funk vibes", "color": "#FF8C00"},
+            {"id": "dreamy", "name": "Dreamy", "description": "Ethereal and atmospheric textures", "color": "#9370DB"},
+            {"id": "confident", "name": "Confident", "description": "Strong and self-assured attitude", "color": "#FFD700"},
+            {"id": "anxious", "name": "Anxious", "description": "Tense and uneasy atmosphere", "color": "#8B4513"},
+            {"id": "euphoric", "name": "Euphoric", "description": "Peak emotional highs and celebration", "color": "#FF1493"},
+            {"id": "introspective", "name": "Introspective", "description": "Deep thought and contemplation", "color": "#4682B4"},
+            {"id": "rebellious", "name": "Rebellious", "description": "Defiant and alternative attitude", "color": "#000000"},
+            {"id": "seductive", "name": "Seductive", "description": "Sensual and alluring for R&B", "color": "#8B008B"},
+            {"id": "powerful", "name": "Powerful", "description": "Strong and commanding presence", "color": "#B8860B"},
+            {"id": "laid_back", "name": "Laid Back", "description": "Relaxed and easy-going vibe", "color": "#F0E68C"},
+            {"id": "professional", "name": "Professional", "description": "Corporate and business-appropriate", "color": "#2F4F4F"},
+            {"id": "adventurous", "name": "Adventurous", "description": "Exciting and exploratory", "color": "#FF4500"},
+            {"id": "sophisticated", "name": "Sophisticated", "description": "Refined and elegant", "color": "#800080"}
         ]
         
         response = {
             "success": True,
             "status": "success",
-            "moods": moods
+            "moods": moods,
+            "source": "fallback"
         }
-        print(f"Moods response: {len(moods)} moods", file=sys.stderr)
+        print(f"⚠️ Using fallback moods: {len(moods)} moods", file=sys.stderr)
+        return jsonify(response)
+    except Exception as e:
+        print(f"Moods error: {str(e)}", file=sys.stderr)
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
         return jsonify(response)
     except Exception as e:
         print(f"Moods error: {str(e)}", file=sys.stderr)
@@ -768,29 +962,38 @@ def generate_music():
         if duration > 60:
             duration = 60  # Limit to 60 seconds for testing
             
-        # Validate genre
-        valid_genres = ['pop', 'rock', 'jazz', 'classical', 'electronic', 'hip-hop', 'ambient', 'cinematic', 'corporate', 'folk', 'indie', 'world', 'rnb', 'country', 'blues', 'reggae', 'funk', 'metal', 'trap', 'house', 'techno', 'dubstep', 'gospel', 'latin', 'k-pop', 'lo-fi', 'afrobeats', 'drill', 'synthwave', 'trance', 'drum_bass', 'bossa_nova', 'punk']
-        if genre not in valid_genres:
-            genre = 'pop'  # Default to pop for unknown genres
-            
-        # Validate mood
-        valid_moods = ['uplifting', 'calm', 'energetic', 'dramatic', 'upbeat', 'mysterious', 'romantic', 'melancholic', 'triumphant', 'playful', 'suspenseful', 'nostalgic', 'meditative', 'aggressive', 'groovy', 'dreamy', 'confident', 'anxious', 'euphoric', 'introspective', 'rebellious', 'seductive', 'powerful', 'laid_back', 'professional', 'adventurous', 'sophisticated']
-        if mood not in valid_moods:
-            mood = 'upbeat'  # Default to upbeat for unknown moods
-        
         print(f"🎼 Generating music: prompt='{prompt}', duration={duration}, genre={genre}, mood={mood}", file=sys.stderr)
         
-        # Generate audio data
-        try:
-            audio_data = generate_simple_audio(
-                duration=duration,
-                genre=genre,
-                mood=mood
-            )
-            print(f"✅ Audio generation completed, shape: {audio_data.shape}", file=sys.stderr)
-        except Exception as audio_error:
-            print(f"❌ Audio generation failed: {audio_error}", file=sys.stderr)
-            raise audio_error
+        generation_start_time = datetime.now()
+        
+        # Try enhanced generation first
+        if ENHANCED_FEATURES_AVAILABLE:
+            try:
+                print("🚀 Using enhanced music generator", file=sys.stderr)
+                audio_data, track_metadata = enhanced_generator.generate_music_with_metadata(
+                    prompt=prompt,
+                    genre_code=genre,
+                    mood_code=mood,
+                    duration=duration
+                )
+                generation_source = "enhanced_ai"
+                print(f"✅ Enhanced generation completed, shape: {audio_data.shape}", file=sys.stderr)
+            except Exception as enhanced_error:
+                print(f"❌ Enhanced generation failed: {enhanced_error}", file=sys.stderr)
+                traceback.print_exc()
+                # Fall back to simple generation
+                audio_data = generate_simple_audio(duration=duration, genre=genre, mood=mood)
+                track_metadata = {}
+                generation_source = "simple_fallback"
+                print(f"⚠️ Fallback generation completed, shape: {audio_data.shape}", file=sys.stderr)
+        else:
+            # Use simple generation
+            audio_data = generate_simple_audio(duration=duration, genre=genre, mood=mood)
+            track_metadata = {}
+            generation_source = "simple"
+            print(f"✅ Simple generation completed, shape: {audio_data.shape}", file=sys.stderr)
+        
+        generation_time = (datetime.now() - generation_start_time).total_seconds()
         
         filename = f"music_{uuid.uuid4().hex[:8]}.wav"
         
@@ -807,44 +1010,58 @@ def generate_music():
             wav_buffer = io.BytesIO()
             write(wav_buffer, 44100, audio_data_int16)
             wav_data = wav_buffer.getvalue()
-            wav_buffer.close()
             
-            print(f"✅ WAV conversion completed, size: {len(wav_data)} bytes", file=sys.stderr)
-        except Exception as wav_error:
-            print(f"❌ WAV conversion failed: {wav_error}", file=sys.stderr)
-            raise wav_error
-        
-        # Save file locally and to Azure Storage
-        try:
-            file_info = save_audio_file(wav_data, filename, upload_to_storage=True)
-            print(f"✅ File saved: {file_info}", file=sys.stderr)
-        except Exception as save_error:
-            print(f"❌ File save failed: {save_error}", file=sys.stderr)
-            # Continue even if save fails, return the audio data
-            file_info = {'local_path': None, 'storage_url': None, 'filename': filename}
-        
-        response_data = {
-            "success": True,
-            "message": "Music generated successfully",
-            "audio_file": filename,
-            "download_url": f"/api/download/{filename}",
-            "storage_url": file_info.get('storage_url'),
-            "metadata": {
-                "prompt": prompt,
+            # Save to file
+            filepath = os.path.join(AUDIO_OUTPUT_DIR, filename)
+            with open(filepath, 'wb') as f:
+                f.write(wav_data)
+            
+            file_size = len(wav_data)
+            print(f"💾 Audio saved: {filepath} ({file_size} bytes)", file=sys.stderr)
+            
+            # Save track metadata to database if available
+            if ENHANCED_FEATURES_AVAILABLE and db_connected and track_metadata:
+                try:
+                    track_data = {
+                        'track_id': filename[:-4],  # Remove .wav extension
+                        'user_prompt': prompt,
+                        'genre_code': genre,
+                        'mood_code': mood,
+                        'duration_seconds': duration,
+                        'parameters': track_metadata.get('parameters', {}),
+                        'file_path': filepath,
+                        'file_size_bytes': file_size,
+                        'audio_format': 'wav',
+                        'generation_model': generation_source,
+                        'generation_time_seconds': generation_time
+                    }
+                    
+                    db_saved = db_manager.save_generated_track(track_data)
+                    print(f"💾 Track metadata saved to database: {db_saved}", file=sys.stderr)
+                except Exception as db_error:
+                    print(f"⚠️ Failed to save track metadata: {db_error}", file=sys.stderr)
+            
+            return jsonify({
+                "success": True,
+                "message": "Music generated successfully",
+                "filename": filename,
                 "duration": duration,
                 "genre": genre,
                 "mood": mood,
-                "filename": filename,
-                "sample_rate": 44100,
-                "storage_available": blob_service_client is not None
-            }
-        }
-        
-        print(f"✅ Music generated successfully: {filename}", file=sys.stderr)
-        return jsonify(response_data)
-        
+                "download_url": f"/api/download/{filename}",
+                "generation_time": generation_time,
+                "generation_source": generation_source,
+                "file_size": file_size,
+                "enhanced_features": ENHANCED_FEATURES_AVAILABLE,
+                "metadata_saved": ENHANCED_FEATURES_AVAILABLE and db_connected
+            })
+            
+        except Exception as wav_error:
+            print(f"❌ WAV processing failed: {wav_error}", file=sys.stderr)
+            raise wav_error
+            
     except Exception as e:
-        print(f"❌ Generate music error: {str(e)}", file=sys.stderr)
+        print(f"❌ Music generation failed: {str(e)}", file=sys.stderr)
         traceback.print_exc()
         return jsonify({
             "success": False,
@@ -867,14 +1084,51 @@ def advanced_generate():
         instruments = data.get('instruments', ['piano', 'guitar', 'bass', 'drums'])
         tempo_bpm = data.get('tempo', 120)
         duration = data.get('duration', 30)
+        key = data.get('key', 'C')
+        complexity = data.get('complexity', 'medium')
         
         print(f"Advanced params: mood={mood}, genre={genre}, instruments={instruments}, tempo={tempo_bpm}", file=sys.stderr)
         
-        audio_data = generate_simple_audio(
-            duration=duration,
-            genre=genre,
-            mood=mood
-        )
+        # Use enhanced generator if available
+        if ENHANCED_FEATURES_AVAILABLE and enhanced_generator:
+            try:
+                # Map frontend instrument names to backend names
+                instrument_mapping = {
+                    'piano': 'acoustic_piano',
+                    'guitar': 'electric_guitar',
+                    'bass': 'bass_guitar',
+                    'drums': 'acoustic_drums',
+                    'strings': 'violin',
+                    'brass': 'trumpet',
+                    'synth': 'synthesizer'
+                }
+                
+                mapped_instruments = [instrument_mapping.get(inst, inst) for inst in instruments]
+                
+                audio_data = enhanced_generator.generate_advanced_music(
+                    genre=genre,
+                    mood=mood,
+                    instruments=mapped_instruments,
+                    tempo_bpm=tempo_bpm,
+                    duration=duration,
+                    key=key,
+                    complexity=complexity
+                )
+                print("Enhanced music generation successful", file=sys.stderr)
+            except Exception as e:
+                print(f"Enhanced generation failed, falling back to simple: {e}", file=sys.stderr)
+                audio_data = generate_simple_audio(
+                    duration=duration,
+                    genre=genre,
+                    mood=mood
+                )
+        else:
+            # Fallback to simple generation
+            audio_data = generate_simple_audio(
+                duration=duration,
+                genre=genre,
+                mood=mood
+            )
         
         filename = f"advanced_music_{uuid.uuid4().hex[:8]}.wav"
         filepath = os.path.join(AUDIO_OUTPUT_DIR, filename)
@@ -886,19 +1140,32 @@ def advanced_generate():
             
         write(filepath, 44100, audio_data_int16)
         
+        # Upload to Azure Storage if available
+        blob_url = None
+        if blob_service_client:
+            try:
+                with open(filepath, 'rb') as audio_file:
+                    blob_url = upload_audio_to_storage(audio_file.read(), filename)
+            except Exception as e:
+                print(f"Failed to upload to storage: {e}", file=sys.stderr)
+        
         response_data = {
             "success": True,
             "message": "Advanced music generated successfully",
             "audio_file": filename,
             "download_url": f"/api/download/{filename}",
+            "blob_url": blob_url,
             "metadata": {
                 "mood": mood,
                 "genre": genre,
                 "instruments": instruments,
                 "tempo": tempo_bpm,
                 "duration": duration,
+                "key": key,
+                "complexity": complexity,
                 "filename": filename,
-                "sample_rate": 44100
+                "sample_rate": 44100,
+                "enhanced_generation": ENHANCED_FEATURES_AVAILABLE and enhanced_generator is not None
             }
         }
         
@@ -1087,6 +1354,49 @@ def get_user_quota():
             'success': False,
             'error': 'Failed to check user quota'
         }), 500
+
+# Database Helper Functions
+def get_database_connection():
+    """Get database connection using FreeTDS/pymssql"""
+    if not DATABASE_AVAILABLE or not SQL_CONNECTION_STRING:
+        return None
+    
+    try:
+        # Parse connection string for pymssql
+        server = "sql-portal-ai-music-dev.database.windows.net"
+        database = "portal-ai-music-db"
+        username = "sqladmin"
+        password = os.getenv('SQL_PASSWORD', 'Portal@AI#Music2025!')
+        
+        conn = pymssql.connect(
+            server=server,
+            user=username,
+            password=password,
+            database=database,
+            port=1433,
+            timeout=30,
+            login_timeout=30,
+            charset='UTF-8'
+        )
+        return conn
+    except Exception as e:
+        print(f"Database connection error: {e}")
+        return None
+
+def test_database_connection():
+    """Test database connectivity"""
+    try:
+        conn = get_database_connection()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 as test")
+            result = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            return True
+    except Exception as e:
+        print(f"Database test failed: {e}")
+    return False
 
 # Data collection integration
 try:

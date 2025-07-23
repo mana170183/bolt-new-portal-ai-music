@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: ai-music-frontend
+    env: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: ai-music-backend
+          property: host
+
+  - type: web
+    name: ai-music-backend
+    env: python
+    plan: starter
+    rootDir: ./backend
+    buildCommand: pip install -r requirements_production.txt
+    startCommand: python app.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        value: 5001

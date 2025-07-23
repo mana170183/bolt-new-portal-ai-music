@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .container { max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: rgba(40, 167, 69, 0.8); border: 1px solid #28a745; }
+        .error { background-color: rgba(220, 53, 69, 0.8); border: 1px solid #dc3545; }
+        .loading { background-color: rgba(255, 193, 7, 0.8); border: 1px solid #ffc107; color: black; }
+        pre { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 3px; overflow-x: auto; font-size: 12px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px 0; }
+        button:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Portal AI Music - API Connection Test</h1>
+        <p>This test checks if the frontend can connect to the backend API.</p>
+        <button onclick="runTests()">Run All Tests</button>
+        <div id="results"></div>
+    </div>
+    
+    <script>
+        const BACKEND_URL = 'https://portal-music-backend-new.ambitiousmeadow-4c2dba6f.uksouth.azurecontainerapps.io';
+        
+        function addResult(title, status, data) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <div class="status ${status}">${status === 'success' ? '✅ Success' : status === 'error' ? '❌ Error' : '⏳ Testing...'}</div>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+                <hr>
+            `;
+            results.appendChild(div);
+        }
+        
+        async function testEndpoint(path, title, method = 'GET', body = null) {
+            addResult(title, 'loading', `Testing ${method} ${BACKEND_URL}${path}`);
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                };
+                
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+                
+                const response = await fetch(`${BACKEND_URL}${path}`, options);
+                
+                // Check if response is HTML (error page)
+                const contentType = response.headers.get('content-type');
+                const responseText = await response.text();
+                
+                if (contentType && contentType.includes('text/html')) {
+                    addResult(title, 'error', { 
+                        error: 'Received HTML instead of JSON', 
+                        status: response.status,
+                        contentType,
+                        preview: responseText.substring(0, 200) + '...'
+                    });
+                    return;
+                }
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    if (response.ok) {
+                        addResult(title, 'success', data);
+                    } else {
+                        addResult(title, 'error', { status: response.status, data });
+                    }
+                } catch (parseError) {
+                    addResult(title, 'error', { 
+                        error: 'Invalid JSON response', 
+                        status: response.status,
+                        contentType,
+                        response: responseText.substring(0, 200) + '...'
+                    });
+                }
+            } catch (error) {
+                addResult(title, 'error', { 
+                    error: error.message,
+                    type: error.name,
+                    stack: error.stack
+                });
+            }
+        }
+        
+        // Test all endpoints
+        async function runTests() {
+            document.getElementById('results').innerHTML = '';
+            
+            // Basic connectivity tests
+            await testEndpoint('/', 'Root Endpoint');
+            await testEndpoint('/api/health', 'Health Check');
+            await testEndpoint('/api/check', 'API Check');
+            
+            // Core API tests
+            await testEndpoint('/api/genres', 'Get Genres');
+            await testEndpoint('/api/moods', 'Get Moods');
+            await testEndpoint('/api/user/quota', 'User Quota');
+            await testEndpoint('/api/user/metadata', 'User Metadata');
+            
+            // Generation test
+            await testEndpoint('/api/generate', 'Generate Music (POST)', 'POST', {
+                genre: 'Pop',
+                mood: 'Upbeat',
+                duration: 30,
+                description: 'Test music generation'
+            });
+        }
+        
+        // Run tests on page load
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

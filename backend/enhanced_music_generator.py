@@ -1,25 +1,41 @@
 """
-🎵 Enhanced Multi-Instrumental Music Generation System
-Comprehensive AI-powered music generator with 15+ instruments, neural style transfer,
-genre/mood awareness, and professional-grade audio processing.
+Enhanced AI Music Generator with Metadata Integration
+Generates music using genre/mood metadata and Azure OpenAI guidance
 """
 
 import numpy as np
-import soundfile as sf
-import librosa
-from scipy import signal
-import random
-import json
-import tempfile
 import os
-import threading
-from typing import Dict, List, Optional, Tuple, Any
-from dataclasses import dataclass
-from enum import Enum
+import sys
+import json
 import logging
-from concurrent.futures import ThreadPoolExecutor
-import warnings
-warnings.filterwarnings("ignore")
+from typing import Dict, List, Optional, Tuple, Any
+from datetime import datetime
+import traceback
+import random
+import math
+from enum import Enum
+from dataclasses import dataclass
+
+# Audio processing
+from scipy.io.wavfile import write
+from scipy import signal
+
+# Try to import optional dependencies
+try:
+    import soundfile as sf
+    import librosa
+    ADVANCED_AUDIO_AVAILABLE = True
+except ImportError:
+    ADVANCED_AUDIO_AVAILABLE = False
+
+# Local imports
+try:
+    from database import get_db
+    from azure_openai_integration import get_azure_ai
+    INTEGRATION_AVAILABLE = True
+except ImportError:
+    INTEGRATION_AVAILABLE = False
+    print("⚠️ Database/AI integration not available")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -496,4 +512,382 @@ class GenreMoodProcessor:
         return styled_params
 
 
-# This will be continued in the next file...
+class EnhancedMusicGenerator:
+    """Main enhanced music generator with metadata integration and AI guidance"""
+    
+    def __init__(self):
+        self.synthesizer = EnhancedInstrumentSynthesizer()
+        self.genre_mood_processor = GenreMoodProcessor()
+        self.db_manager = None
+        self.ai_manager = None
+        
+        # Initialize integrations if available
+        if INTEGRATION_AVAILABLE:
+            try:
+                self.db_manager = get_db()
+                self.ai_manager = get_azure_ai()
+                logger.info("Enhanced generator initialized with database and AI integration")
+            except Exception as e:
+                logger.warning(f"Integration initialization failed: {e}")
+    
+    def generate_advanced_music(self, 
+                               genre: str = 'pop',
+                               mood: str = 'happy',
+                               instruments: List[str] = None,
+                               tempo_bpm: int = 120,
+                               duration: float = 30.0,
+                               key: str = 'C',
+                               complexity: str = 'medium') -> np.ndarray:
+        """Generate advanced multi-instrumental music with AI guidance"""
+        
+        try:
+            # Set default instruments if none provided
+            if instruments is None:
+                instruments = ['acoustic_piano', 'electric_guitar', 'bass_guitar', 'acoustic_drums']
+            
+            # Base parameters
+            base_params = {
+                'tempo_bpm': tempo_bpm,
+                'duration': duration,
+                'key': key,
+                'complexity': complexity,
+                'sample_rate': self.synthesizer.sample_rate
+            }
+            
+            # Apply genre and mood styling
+            styled_params = self.genre_mood_processor.apply_genre_style(base_params, genre)
+            styled_params = self.genre_mood_processor.apply_mood_style(styled_params, mood)
+            
+            # Generate AI-guided composition if available
+            composition_guidance = self._get_ai_composition_guidance(genre, mood, instruments, styled_params)
+            
+            # Generate individual instrument tracks
+            tracks = []
+            for instrument in instruments[:6]:  # Limit to 6 instruments for performance
+                track = self._generate_instrument_track(
+                    instrument, styled_params, composition_guidance
+                )
+                if track is not None:
+                    tracks.append(track)
+            
+            # Mix tracks together
+            if tracks:
+                mixed_audio = self._mix_tracks(tracks, styled_params)
+                
+                # Apply final mastering
+                mastered_audio = self._apply_mastering(mixed_audio, styled_params)
+                
+                # Save metadata if database available
+                self._save_generation_metadata(genre, mood, instruments, styled_params, mastered_audio)
+                
+                return mastered_audio
+            else:
+                # Fallback to simple generation
+                return self._generate_fallback_music(styled_params)
+                
+        except Exception as e:
+            logger.error(f"Advanced music generation failed: {e}")
+            # Return fallback audio
+            return self._generate_fallback_music({'duration': duration, 'sample_rate': 44100})
+    
+    def _get_ai_composition_guidance(self, genre: str, mood: str, instruments: List[str], params: Dict) -> Dict:
+        """Get AI guidance for composition structure"""
+        guidance = {
+            'chord_progression': ['C', 'F', 'G', 'C'],  # Default
+            'structure': ['intro', 'verse', 'chorus', 'verse', 'chorus', 'outro'],
+            'dynamics': [0.3, 0.7, 0.9, 0.7, 0.9, 0.3]
+        }
+        
+        if self.ai_manager:
+            try:
+                # AI-guided composition (simplified for now)
+                prompt = f"Generate a {genre} song in {mood} mood with {', '.join(instruments)} at {params.get('tempo_bpm', 120)} BPM"
+                ai_guidance = self.ai_manager.get_composition_guidance(prompt)
+                if ai_guidance:
+                    guidance.update(ai_guidance)
+            except Exception as e:
+                logger.warning(f"AI guidance failed, using defaults: {e}")
+        
+        return guidance
+    
+    def _generate_instrument_track(self, instrument: str, params: Dict, guidance: Dict) -> Optional[np.ndarray]:
+        """Generate audio track for a specific instrument"""
+        try:
+            duration = params.get('duration', 30.0)
+            sample_rate = params.get('sample_rate', 44100)
+            
+            # Create base frequency sequence based on guidance
+            chord_progression = guidance.get('chord_progression', ['C', 'F', 'G', 'C'])
+            structure = guidance.get('structure', ['verse', 'chorus'])
+            
+            # Generate note sequence
+            notes = self._generate_note_sequence(instrument, chord_progression, structure, params)
+            
+            # Synthesize the track
+            track_audio = self._synthesize_track(instrument, notes, params)
+            
+            # Apply instrument-specific effects
+            processed_track = self._apply_instrument_effects(track_audio, instrument, params)
+            
+            return processed_track
+            
+        except Exception as e:
+            logger.error(f"Failed to generate track for {instrument}: {e}")
+            return None
+    
+    def _generate_note_sequence(self, instrument: str, chord_progression: List[str], structure: List[str], params: Dict) -> List[Dict]:
+        """Generate a sequence of notes for the instrument"""
+        notes = []
+        duration = params.get('duration', 30.0)
+        tempo_bpm = params.get('tempo_bpm', 120)
+        
+        # Calculate timing
+        beats_per_second = tempo_bpm / 60.0
+        total_beats = duration * beats_per_second
+        beats_per_chord = total_beats / len(chord_progression)
+        
+        current_time = 0.0
+        
+        for i, chord in enumerate(chord_progression):
+            chord_duration = beats_per_chord / beats_per_second
+            
+            # Generate notes based on instrument type and chord
+            if instrument in ['acoustic_drums', 'electronic_drums']:
+                # Drum pattern
+                drum_notes = self._generate_drum_pattern(chord_duration, current_time, params)
+                notes.extend(drum_notes)
+            else:
+                # Melodic instrument
+                melodic_notes = self._generate_melodic_pattern(instrument, chord, chord_duration, current_time, params)
+                notes.extend(melodic_notes)
+            
+            current_time += chord_duration
+        
+        return notes
+    
+    def _generate_drum_pattern(self, duration: float, start_time: float, params: Dict) -> List[Dict]:
+        """Generate drum pattern"""
+        notes = []
+        tempo_bpm = params.get('tempo_bpm', 120)
+        beat_duration = 60.0 / tempo_bpm
+        
+        current_time = start_time
+        while current_time < start_time + duration:
+            # Kick on beats 1 and 3
+            if int((current_time - start_time) / beat_duration) % 2 == 0:
+                notes.append({
+                    'instrument': 'kick',
+                    'start_time': current_time,
+                    'duration': 0.1,
+                    'velocity': 0.8
+                })
+            
+            # Snare on beats 2 and 4
+            elif int((current_time - start_time) / beat_duration) % 2 == 1:
+                notes.append({
+                    'instrument': 'snare',
+                    'start_time': current_time,
+                    'duration': 0.2,
+                    'velocity': 0.7
+                })
+            
+            # Hi-hat every half beat
+            notes.append({
+                'instrument': 'hihat',
+                'start_time': current_time,
+                'duration': 0.1,
+                'velocity': 0.4
+            })
+            
+            current_time += beat_duration / 2
+        
+        return notes
+    
+    def _generate_melodic_pattern(self, instrument: str, chord: str, duration: float, start_time: float, params: Dict) -> List[Dict]:
+        """Generate melodic pattern for non-drum instruments"""
+        notes = []
+        
+        # Simple chord frequencies (C major scale)
+        chord_frequencies = {
+            'C': [261.63, 329.63, 392.00],  # C, E, G
+            'F': [349.23, 440.00, 523.25],  # F, A, C
+            'G': [392.00, 493.88, 587.33],  # G, B, D
+            'Am': [220.00, 261.63, 329.63], # A, C, E
+            'Dm': [293.66, 349.23, 440.00], # D, F, A
+            'Em': [329.63, 392.00, 493.88]  # E, G, B
+        }
+        
+        frequencies = chord_frequencies.get(chord, chord_frequencies['C'])
+        
+        # Generate note pattern based on instrument
+        if instrument in ['bass_guitar']:
+            # Bass plays root note
+            notes.append({
+                'frequency': frequencies[0] / 2,  # Lower octave
+                'start_time': start_time,
+                'duration': duration,
+                'velocity': 0.7
+            })
+        elif instrument in ['acoustic_piano', 'electric_piano']:
+            # Piano plays chord progression
+            note_duration = duration / 4
+            for i, freq in enumerate(frequencies):
+                notes.append({
+                    'frequency': freq,
+                    'start_time': start_time + (i * note_duration / 3),
+                    'duration': note_duration,
+                    'velocity': 0.6
+                })
+        else:
+            # Other instruments play melody
+            note_duration = duration / len(frequencies)
+            for i, freq in enumerate(frequencies):
+                notes.append({
+                    'frequency': freq,
+                    'start_time': start_time + (i * note_duration),
+                    'duration': note_duration * 0.8,
+                    'velocity': 0.5
+                })
+        
+        return notes
+    
+    def _synthesize_track(self, instrument: str, notes: List[Dict], params: Dict) -> np.ndarray:
+        """Synthesize audio track from note sequence"""
+        duration = params.get('duration', 30.0)
+        sample_rate = params.get('sample_rate', 44100)
+        
+        # Initialize empty track
+        track = np.zeros(int(duration * sample_rate))
+        
+        for note in notes:
+            try:
+                if instrument in ['acoustic_drums', 'electronic_drums']:
+                    # Generate drum sound
+                    drum_type = note.get('instrument', 'kick')
+                    note_audio = self.synthesizer.generate_enhanced_drums(
+                        drum_type, note.get('velocity', 0.7)
+                    )
+                else:
+                    # Generate tonal instrument sound
+                    frequency = note.get('frequency', 440.0)
+                    note_duration = note.get('duration', 0.5)
+                    velocity = note.get('velocity', 0.5)
+                    
+                    if instrument.startswith('acoustic_piano'):
+                        note_audio = self.synthesizer.generate_enhanced_piano(frequency, note_duration, velocity)
+                    elif instrument.startswith('electric_guitar'):
+                        note_audio = self.synthesizer.generate_electric_guitar(frequency, note_duration, velocity)
+                    elif instrument.startswith('bass_guitar'):
+                        note_audio = self.synthesizer.generate_bass_guitar(frequency, note_duration, velocity)
+                    elif instrument in ['violin', 'cello']:
+                        note_audio = self.synthesizer.generate_strings(frequency, note_duration, velocity, instrument)
+                    elif instrument in ['trumpet', 'trombone', 'saxophone']:
+                        note_audio = self.synthesizer.generate_brass(frequency, note_duration, velocity, instrument)
+                    else:
+                        # Default to piano sound
+                        note_audio = self.synthesizer.generate_enhanced_piano(frequency, note_duration, velocity)
+                
+                # Add note to track at specified time
+                start_sample = int(note.get('start_time', 0) * sample_rate)
+                end_sample = min(start_sample + len(note_audio), len(track))
+                
+                if start_sample < len(track):
+                    track[start_sample:end_sample] += note_audio[:end_sample-start_sample]
+                    
+            except Exception as e:
+                logger.warning(f"Failed to synthesize note: {e}")
+                continue
+        
+        return track
+    
+    def _apply_instrument_effects(self, track: np.ndarray, instrument: str, params: Dict) -> np.ndarray:
+        """Apply instrument-specific audio effects"""
+        # Basic processing - could be expanded with more sophisticated effects
+        processed = track.copy()
+        
+        # Normalize to prevent clipping
+        if np.max(np.abs(processed)) > 0:
+            processed = processed / np.max(np.abs(processed)) * 0.8
+        
+        return processed
+    
+    def _mix_tracks(self, tracks: List[np.ndarray], params: Dict) -> np.ndarray:
+        """Mix multiple instrument tracks together"""
+        if not tracks:
+            return np.zeros(int(params.get('duration', 30) * params.get('sample_rate', 44100)))
+        
+        # Ensure all tracks are the same length
+        max_length = max(len(track) for track in tracks)
+        mixed = np.zeros(max_length)
+        
+        for track in tracks:
+            # Pad track if necessary
+            if len(track) < max_length:
+                padded_track = np.zeros(max_length)
+                padded_track[:len(track)] = track
+                track = padded_track
+            
+            # Add track to mix with appropriate level
+            mixed += track * (1.0 / len(tracks))
+        
+        return mixed
+    
+    def _apply_mastering(self, audio: np.ndarray, params: Dict) -> np.ndarray:
+        """Apply final mastering to the mixed audio"""
+        mastered = audio.copy()
+        
+        # Normalize
+        if np.max(np.abs(mastered)) > 0:
+            mastered = mastered / np.max(np.abs(mastered)) * 0.9
+        
+        # Simple limiter
+        mastered = np.clip(mastered, -1.0, 1.0)
+        
+        return mastered
+    
+    def _save_generation_metadata(self, genre: str, mood: str, instruments: List[str], params: Dict, audio: np.ndarray):
+        """Save generation metadata to database"""
+        if self.db_manager:
+            try:
+                metadata = {
+                    'genre': genre,
+                    'mood': mood,
+                    'instruments': instruments,
+                    'tempo_bpm': params.get('tempo_bpm'),
+                    'duration': params.get('duration'),
+                    'audio_length': len(audio),
+                    'generated_at': datetime.now()
+                }
+                self.db_manager.save_generation_metadata(metadata)
+            except Exception as e:
+                logger.warning(f"Failed to save metadata: {e}")
+    
+    def _generate_fallback_music(self, params: Dict) -> np.ndarray:
+        """Generate simple fallback music when advanced generation fails"""
+        duration = params.get('duration', 30.0)
+        sample_rate = params.get('sample_rate', 44100)
+        
+        # Simple sine wave melody
+        t = np.linspace(0, duration, int(sample_rate * duration), False)
+        frequencies = [262, 294, 330, 349, 392, 440, 494, 523]  # C major scale
+        
+        audio = np.zeros_like(t)
+        note_duration = duration / len(frequencies)
+        
+        for i, freq in enumerate(frequencies):
+            start_idx = int(i * note_duration * sample_rate)
+            end_idx = int((i + 1) * note_duration * sample_rate)
+            if end_idx > len(t):
+                end_idx = len(t)
+            
+            if start_idx < len(t):
+                note_t = t[start_idx:end_idx] - t[start_idx]
+                envelope = np.exp(-2 * note_t)
+                note = np.sin(2 * np.pi * freq * note_t) * envelope
+                audio[start_idx:end_idx] += note * 0.3
+        
+        return audio
+
+
+# Export main class
+__all__ = ['EnhancedMusicGenerator', 'EnhancedInstrumentSynthesizer', 'GenreMoodProcessor']
