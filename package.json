@@ -11,15 +11,12 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "legacy:dev": "vite",
-    "legacy:build": "vite build",
-    "postinstall": "prisma generate"
+    "legacy:build": "vite build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.34",
     "@clerk/nextjs": "^5.2.0",
     "@hookform/resolvers": "^3.8.0",
-    "@prisma/client": "^5.15.0",
-    "@vercel/blob": "^0.23.4",
     "ai": "^3.2.25",
     "axios": "^1.10.0",
     "clsx": "^2.1.1",
@@ -49,7 +46,6 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.5",
     "postcss": "^8.4.39",
-    "prisma": "^6.11.1",
     "tailwindcss": "^3.4.6",
     "vite": "^7.0.3"
   },
