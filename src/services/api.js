@@ -2,10 +2,12 @@ import axios from 'axios';
 
 // API Configuration - FORCE Azure Static Web App backend /api/ path
 // Override any environment variables that might point to old backend
-const API_BASE_URL = '/api';  // Always use Static Web Apps API
+// Check for runtime override first
+const API_BASE_URL = window.__VITE_API_BASE_URL__ || '/api';  // Always use Static Web Apps API
 
 console.log('🔧 API Configuration:', {
   baseURL: API_BASE_URL,
+  runtimeOverride: window.__FORCE_LOCAL_API__,
   env_VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
   env_VITE_API_URL: import.meta.env.VITE_API_URL,
   isProd: import.meta.env.PROD

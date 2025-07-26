@@ -8,6 +8,12 @@
     <meta name="description" content="Create royalty-free AI music with Portal AI Music. Generate custom tracks for videos, podcasts, and content creation using advanced AI technology." />
   </head>
   <body>
+    <!-- Force API configuration override -->
+    <script>
+      window.__VITE_API_BASE_URL__ = '/api';
+      window.__FORCE_LOCAL_API__ = true;
+      console.log('🔧 Runtime API Override: Force /api/ backend');
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
