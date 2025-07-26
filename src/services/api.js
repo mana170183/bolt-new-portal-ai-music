@@ -5,13 +5,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
                      import.meta.env.VITE_API_URL || 
                      (import.meta.env.PROD ? '/api' : '/api');
 
-// Feature flag for mock mode when backend is unavailable
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
-
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // Reduced to 10 seconds to fail faster
+  timeout: 10000, // Reduced timeout for faster fallback
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,66 +17,43 @@ const api = axios.create({
 // Token management
 let authToken = localStorage.getItem('auth_token');
 
-// Mock data for when backend is unavailable
-const mockData = {
+// Mock data for fallback when API is not available
+const MOCK_DATA = {
   health: {
-    status: "healthy",
-    message: "AI Music Backend API is running (Mock Mode)",
-    version: "1.0.0-mock"
+    status: 'healthy',
+    message: 'AI Music Backend API is running (Mock Mode)',
+    version: '2.0.0',
+    timestamp: new Date().toISOString(),
+    backend: 'Mock/Fallback'
   },
   genres: [
-    { id: "pop", name: "Pop", description: "Modern popular music" },
-    { id: "rock", name: "Rock", description: "Rock and alternative music" },
-    { id: "electronic", name: "Electronic", description: "Electronic and dance music" },
-    { id: "jazz", name: "Jazz", description: "Jazz and blues" },
-    { id: "classical", name: "Classical", description: "Classical and orchestral" },
-    { id: "hiphop", name: "Hip Hop", description: "Hip hop and rap" },
-    { id: "ambient", name: "Ambient", description: "Ambient and atmospheric" },
-    { id: "folk", name: "Folk", description: "Folk and acoustic" }
+    { id: 'pop', name: 'Pop', description: 'Modern popular music' },
+    { id: 'rock', name: 'Rock', description: 'Rock and alternative music' },
+    { id: 'electronic', name: 'Electronic', description: 'Electronic and dance music' },
+    { id: 'jazz', name: 'Jazz', description: 'Jazz and blues' },
+    { id: 'classical', name: 'Classical', description: 'Classical and orchestral' },
+    { id: 'hiphop', name: 'Hip Hop', description: 'Hip hop and rap' },
+    { id: 'ambient', name: 'Ambient', description: 'Ambient and atmospheric' },
+    { id: 'folk', name: 'Folk', description: 'Folk and acoustic' }
   ],
   moods: [
-    { id: "happy", name: "Happy", description: "Upbeat and joyful" },
-    { id: "sad", name: "Sad", description: "Melancholic and emotional" },
-    { id: "energetic", name: "Energetic", description: "High energy and motivating" },
-    { id: "relaxed", name: "Relaxed", description: "Calm and peaceful" },
-    { id: "dramatic", name: "Dramatic", description: "Intense and powerful" },
-    { id: "mysterious", name: "Mysterious", description: "Dark and intriguing" },
-    { id: "romantic", name: "Romantic", description: "Love and passion" },
-    { id: "nostalgic", name: "Nostalgic", description: "Reminiscent and wistful" }
-  ],
-  generateMusic: (params) => ({
-    success: true,
-    message: "Music generated successfully (Demo Mode)",
-    track: {
-      id: `track_${Date.now()}`,
-      title: `AI Generated - ${params.prompt?.substring(0, 30) || 'Untitled'}`,
-      duration: params.duration || 30,
-      genre: params.genre || 'pop',
-      mood: params.mood || 'happy',
-      url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav", // Demo audio
-      created_at: new Date().toISOString(),
-      isDemo: true
-    }
-  })
+    { id: 'happy', name: 'Happy', description: 'Upbeat and joyful' },
+    { id: 'sad', name: 'Sad', description: 'Melancholic and emotional' },
+    { id: 'energetic', name: 'Energetic', description: 'High energy and motivating' },
+    { id: 'relaxed', name: 'Relaxed', description: 'Calm and peaceful' },
+    { id: 'dramatic', name: 'Dramatic', description: 'Intense and powerful' },
+    { id: 'mysterious', name: 'Mysterious', description: 'Dark and intriguing' },
+    { id: 'romantic', name: 'Romantic', description: 'Love and passion' },
+    { id: 'nostalgic', name: 'Nostalgic', description: 'Reminiscent and wistful' }
+  ]
 };
 
-// Helper function to handle API calls with fallback to mock data
-async function apiCallWithFallback(apiCall, mockResponse) {
-  if (USE_MOCK_DATA) {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { data: mockResponse };
-  }
-  
-  try {
-    return await apiCall();
-  } catch (error) {
-    console.warn('API call failed, using mock data:', error.message);
-    // Fallback to mock data if API fails
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return { data: mockResponse };
-  }
-}
+// Fallback function when API is not available
+const createMockResponse = (data) => {
+  return new Promise(resolve => {
+    setTimeout(() => resolve({ data }), 500); // Simulate network delay
+  });
+};
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
@@ -167,20 +141,36 @@ export const musicAPI = {
 
       console.log('Generating music with params:', { prompt, genre, mood, duration });
 
-      const response = await apiCallWithFallback(
-        () => api.post('/generate-music', {
-          prompt,
-          genre: genre || style,
-          mood,
-          duration
-        }),
-        mockData.generateMusic({ prompt, genre: genre || style, mood, duration })
-      );
+      const response = await api.post('/generate-music', {
+        prompt,
+        genre: genre || style,
+        mood,
+        duration
+      });
 
       return response.data;
     } catch (error) {
-      console.error('Music generation failed:', error);
-      throw error;
+      console.warn('Music generation failed, using mock data:', error.message);
+      
+      // Create mock response
+      const trackId = `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const mockTrack = {
+        success: true,
+        message: 'Music generated successfully (Mock Mode)',
+        track: {
+          id: trackId,
+          title: `AI Generated - ${prompt?.substring(0, 30) || 'Demo Track'}`,
+          duration: duration || 30,
+          genre: genre || 'pop',
+          mood: mood || 'happy',
+          url: `https://www.soundjay.com/misc/sounds/bell-ringing-05.wav`,
+          preview_url: `https://www.soundjay.com/misc/sounds/bell-ringing-05.wav`,
+          created_at: new Date().toISOString(),
+          prompt: prompt || 'Demo music generation'
+        }
+      };
+      
+      return createMockResponse(mockTrack).then(res => res.data);
     }
   },
 
@@ -225,33 +215,21 @@ export const musicAPI = {
 
   async getGenres() {
     try {
-      const response = await apiCallWithFallback(
-        () => api.get('/genres'),
-        mockData.genres
-      );
+      const response = await api.get('/genres');
       return response.data;
     } catch (error) {
-      console.error('Failed to get genres:', error);
-      // Return fallback data
-      return mockData.genres;
+      console.warn('Failed to get genres, using mock data:', error.message);
+      return createMockResponse(MOCK_DATA.genres).then(res => res.data);
     }
   },
 
   async getMoods() {
     try {
-      const response = await apiCallWithFallback(
-        () => api.get('/moods'),
-        mockData.moods
-      );
-      return response.data;
+      const response = await api.get('/moods');
       return response.data;
     } catch (error) {
-      console.error('Failed to get moods:', error);
-      // Return fallback data
-      return {
-        success: true,
-        moods: ['happy', 'sad', 'energetic', 'calm', 'mysterious', 'epic', 'romantic', 'upbeat']
-      };
+      console.warn('Failed to get moods, using mock data:', error.message);
+      return createMockResponse(MOCK_DATA.moods).then(res => res.data);
     }
   }
 };
@@ -377,27 +355,21 @@ export const externalMusicAPI = {
 export const healthAPI = {
   async check() {
     try {
-      const response = await apiCallWithFallback(
-        () => api.get('/health'),
-        mockData.health
-      );
+      const response = await api.get('/health');
       return response.data;
     } catch (error) {
-      console.error('Health check failed:', error);
-      throw error;
+      console.warn('Health check failed, using mock data:', error.message);
+      return createMockResponse(MOCK_DATA.health).then(res => res.data);
     }
   },
 
   async getInfo() {
     try {
-      const response = await apiCallWithFallback(
-        () => api.get('/'),
-        mockData.health
-      );
+      const response = await api.get('/');
       return response.data;
     } catch (error) {
-      console.error('Failed to get API info:', error);
-      throw error;
+      console.warn('API info failed, using mock data:', error.message);
+      return createMockResponse(MOCK_DATA.health).then(res => res.data);
     }
   },
 
