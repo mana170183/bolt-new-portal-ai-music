@@ -22,15 +22,31 @@
 3. ⚠️ **API Issues**: Functions returning 404 - needs configuration fix  
 4. ⏳ **Go Live**: Pending API function fixes  
 
-## Current Status
+## Current Status - DEBUG MODE 🔍
 - **Frontend**: ✅ Working at https://gentle-moss-005c68f03.2.azurestaticapps.net
-- **API Health**: ❌ 404 Error - Functions not accessible  
-- **Next**: Fix Azure Functions configuration for Static Web Apps
+- **API Status**: ❌ 404 Error - Azure Functions not accessible
+- **Issue**: Static Web Apps not detecting Functions (v4 model compatibility issue)
 
-## Immediate Actions Needed
-1. **Fix Function Configuration**: Azure Functions need proper binding
-2. **Check host.json**: May need Static Web Apps compatible config
-3. **Verify Function Discovery**: Ensure Azure can detect all functions
+## What We've Tried
+1. ✅ Fixed gRPC dependencies and Python 3.11 runtime
+2. ✅ Updated host.json for Static Web Apps compatibility  
+3. ✅ Switched from individual functions to v4 programming model
+4. ✅ Cleaned requirements.txt to essential packages only
+5. ❌ API endpoints still returning 404
+
+## Next Debugging Steps
+**Option A: Revert to v1 Programming Model**
+- Azure Static Web Apps may not fully support v4 model yet
+- Create individual function directories with function.json
+
+**Option B: Check Azure Portal**
+- Review build logs in Azure Static Web Apps
+- Verify Functions are being deployed
+- Check for Python/Function compatibility issues
+
+**Option C: Alternative Deployment**
+- Consider separate Azure Functions App + Static Web Apps
+- Or use different API hosting (Azure Container Apps, App Service)
 
 ## Test After Deployment
 ```bash

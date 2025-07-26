@@ -1,11 +1,11 @@
-# Azure Functions v4 Programming Model
-azure-functions>=1.18.0
+# Azure Functions v1 Programming Model - Static Web Apps Compatible
+azure-functions==1.15.0
+azure-functions-worker==1.0.0
 
-# Core dependencies with stable versions
+# Core dependencies
 python-dotenv==1.0.0
 requests==2.31.0
-openai==1.12.0
 
-# Essential build tools to prevent compilation issues
+# Build tools to prevent compilation issues
 setuptools>=65.0.0
 wheel>=0.38.0
