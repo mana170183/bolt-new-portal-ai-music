@@ -1,6 +1,5 @@
-# Azure Functions Core - Updated for Static Web Apps compatibility
-azure-functions>=1.15.0
-azure-functions-worker>=1.0.0
+# Azure Functions v4 Programming Model
+azure-functions>=1.18.0
 
 # Core dependencies with stable versions
 python-dotenv==1.0.0
@@ -10,17 +9,3 @@ openai==1.12.0
 # Essential build tools to prevent compilation issues
 setuptools>=65.0.0
 wheel>=0.38.0
-
-# Azure Services - lightweight versions to avoid build conflicts (optional)
-# azure-storage-blob==12.17.0
-# azure-keyvault-secrets==4.6.0
-# azure-identity==1.14.0
-
-# Music services - lightweight (optional - enable as needed)
-# spotipy==2.22.1
-# musicbrainzngs==0.7.1
-
-# Audio processing - commented out to avoid gRPC build issues
-# numpy==1.24.3
-# librosa==0.10.1
-# soundfile==0.12.1
