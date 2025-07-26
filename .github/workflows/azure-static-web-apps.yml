@@ -30,6 +30,11 @@ jobs:
       
       - name: Build frontend
         run: npm run build
+        env:
+          VITE_API_BASE_URL: /api
+          VITE_API_URL: /api
+          BACKEND_URL: ""
+          AZURE_BACKEND_URL: ""
       
       - name: Build And Deploy
         id: builddeploy
