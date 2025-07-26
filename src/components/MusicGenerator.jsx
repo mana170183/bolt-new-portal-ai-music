@@ -24,8 +24,28 @@ const MusicGenerator = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [genres, setGenres] = useState([])
-  const [moods, setMoods] = useState([])
+  const [genres, setGenres] = useState([
+    {id: 'pop', name: 'Pop', description: 'Popular music with catchy melodies'},
+    {id: 'rock', name: 'Rock', description: 'Guitar-driven energetic music'},
+    {id: 'jazz', name: 'Jazz', description: 'Improvised, swing rhythms'},
+    {id: 'classical', name: 'Classical', description: 'Orchestral, traditional'},
+    {id: 'electronic', name: 'Electronic', description: 'Synthesized, digital sounds'},
+    {id: 'orchestral', name: 'Orchestral', description: 'Full orchestra compositions'},
+    {id: 'ambient', name: 'Ambient', description: 'Atmospheric, background music'},
+    {id: 'hip-hop', name: 'Hip Hop', description: 'Rhythmic, beat-focused music'},
+    {id: 'country', name: 'Country', description: 'Folk-inspired American music'},
+    {id: 'blues', name: 'Blues', description: 'Soulful, guitar-based music'}
+  ])
+  const [moods, setMoods] = useState([
+    {id: 'upbeat', name: 'Upbeat', description: 'Happy, energetic feeling'},
+    {id: 'calm', name: 'Calm', description: 'Peaceful, relaxing'},
+    {id: 'energetic', name: 'Energetic', description: 'High-energy, motivating'},
+    {id: 'dramatic', name: 'Dramatic', description: 'Intense, emotional'},
+    {id: 'uplifting', name: 'Uplifting', description: 'Inspiring, positive'},
+    {id: 'mysterious', name: 'Mysterious', description: 'Dark, intriguing'},
+    {id: 'romantic', name: 'Romantic', description: 'Love-themed, tender'},
+    {id: 'melancholic', name: 'Melancholic', description: 'Sad, contemplative'}
+  ])
   const [userQuota, setUserQuota] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
@@ -82,10 +102,10 @@ const MusicGenerator = () => {
           musicAPI.getUserQuota()
         ])
 
-        if (genresData.status === 'success') {
+        if (genresData.status === 'success' && genresData.genres && genresData.genres.length > 0) {
           setGenres(genresData.genres)
         }
-        if (moodsData.status === 'success') {
+        if (moodsData.status === 'success' && moodsData.moods && moodsData.moods.length > 0) {
           setMoods(moodsData.moods)
         }
         if (quotaData.status === 'success') {
@@ -93,18 +113,7 @@ const MusicGenerator = () => {
         }
       } catch (metadataError) {
         console.error('Failed to load metadata:', metadataError)
-        // Set default values if API fails
-        setGenres([
-          {id: 'pop', name: 'Pop', description: 'Catchy, mainstream melodies'},
-          {id: 'rock', name: 'Rock', description: 'Guitar-driven, energetic'},
-          {id: 'electronic', name: 'Electronic', description: 'Synthesized, digital sounds'}
-        ])
-        setMoods([
-          {id: 'upbeat', name: 'Upbeat', description: 'Happy, energetic feeling'},
-          {id: 'calm', name: 'Calm', description: 'Peaceful, relaxing'},
-          {id: 'energetic', name: 'Energetic', description: 'High-energy, motivating'}
-        ])
-        // Don't show error for metadata loading failure if auth worked
+        // Default values are already set in useState, so we don't need to set them here
         console.warn('Using default metadata due to API error')
       }
     } catch (error) {
@@ -250,17 +259,17 @@ const MusicGenerator = () => {
             </div>
 
             {/* Settings Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="space-y-6 mb-8">
               {/* Duration */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2 flex items-center">
-                  <Clock className="h-4 w-4 mr-2" />
+                <label className="block text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <Clock className="h-5 w-5 mr-2" />
                   Duration
                 </label>
                 <select
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
-                  className="input-field"
+                  className="input-field max-w-xs"
                 >
                   <option value={15}>15 seconds</option>
                   <option value={30}>30 seconds</option>
@@ -270,38 +279,44 @@ const MusicGenerator = () => {
                 </select>
               </div>
 
-              {/* Genre */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2 flex items-center">
-                  <Music className="h-4 w-4 mr-2" />
-                  Genre
-                </label>
-                <select
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                  className="input-field"
-                >
-                  {genres.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Genre Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <Music className="h-5 w-5 mr-2" />
+                    Genre
+                  </label>
+                  <select
+                    value={genre}
+                    onChange={(e) => setGenre(e.target.value)}
+                    className="input-field w-full"
+                  >
+                    {genres.map(g => (
+                      <option key={g.id} value={g.id}>
+                        {g.name} - {g.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Mood */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2 flex items-center">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Mood
-                </label>
-                <select
-                  value={mood}
-                  onChange={(e) => setMood(e.target.value)}
-                  className="input-field"
-                >
-                  {moods.map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
+                {/* Mood Selection */}
+                <div>
+                  <label className="block text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <Settings className="h-5 w-5 mr-2" />
+                    Mood & Atmosphere
+                  </label>
+                  <select
+                    value={mood}
+                    onChange={(e) => setMood(e.target.value)}
+                    className="input-field w-full"
+                  >
+                    {moods.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} - {m.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 

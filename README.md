@@ -1,5 +1,9 @@
 # Portal AI Music 🎵
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Azure-blue?style=for-the-badge&logo=microsoft-azure)](https://portalaimusicstatic.z33.web.core.windows.net/)
+
+**🚀 Live Website:** [https://portalaimusicstatic.z33.web.core.windows.net/](https://portalaimusicstatic.z33.web.core.windows.net/)
+
 A modern AI-powered music generation platform that creates royalty-free music from text descriptions. Built with React, Flask, and Azure cloud services.
 
 ![Portal AI Music](https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=400&fit=crop&crop=center)
