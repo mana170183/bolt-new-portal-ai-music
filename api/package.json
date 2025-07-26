@@ -1,0 +1,13 @@
+{
+  "name": "ai-music-api",
+  "version": "1.0.0",
+  "description": "AI Music Generation API",
+  "main": "health.js",
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {},
+  "scripts": {
+    "start": "node health.js"
+  }
+}
