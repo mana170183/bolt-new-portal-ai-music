@@ -1,15 +1,34 @@
+# Azure Functions Core
 azure-functions==1.18.0
 azure-functions-worker==1.0.0
-azure-storage-blob==12.19.0
-pyodbc==5.0.1
-openai==1.12.0
-requests==2.31.0
+
+# Azure Services - lightweight versions to avoid build conflicts
+azure-storage-blob==12.17.0
+azure-keyvault-secrets==4.6.0
+azure-identity==1.14.0
+
+# Database
+pyodbc==4.0.39
+
+# Core dependencies with stable versions
 python-dotenv==1.0.0
-spotipy==2.23.0
+requests==2.31.0
+openai==1.12.0
+
+# Music services - lightweight
+spotipy==2.22.1
 musicbrainzngs==0.7.1
-azure-keyvault-secrets==4.7.0
-azure-identity==1.15.0
-azure-cognitiveservices-speech==1.35.0
-numpy==1.24.3
-librosa==0.10.1
-soundfile==0.12.1
+
+# Essential build tools to prevent compilation issues
+setuptools>=65.0.0
+wheel>=0.38.0
+Cython>=0.29.0
+
+# Audio processing - commented out to avoid gRPC build issues
+# numpy==1.24.3
+# librosa==0.10.1
+# soundfile==0.12.1
+# azure-cognitiveservices-speech==1.35.0
+
+# Alternative lightweight audio processing (if needed)
+# mutagen==1.47.0
