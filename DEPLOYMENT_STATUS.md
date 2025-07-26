@@ -58,6 +58,30 @@
 ✅ **Console Logging**: Debug info shows correct API path  
 ✅ **Backend Targeting**: Now points to Static Web Apps API  
 
+### 🎯 **FINAL FIX APPLIED - GitHub Actions Environment Override**
+
+**Problem Discovered:** Old backend URL was being baked into the build!  
+**Evidence:** `curl` of deployed JS shows `music-backend-fresh-1753522347.azurewebsites.net`  
+**Solution:** Added explicit environment variables to GitHub Actions workflow  
+
+### ⚡ **LATEST CHANGES (DEFINITIVE FIX)**
+✅ **Hard-coded API to `/api/`** in source code  
+✅ **Added .env overrides** (local development)  
+✅ **GitHub Actions override** - Forces correct environment in CI/CD  
+✅ **Version bump to 1.1.0** - Triggers fresh deployment  
+
+### 🔄 **DEPLOYMENT STATUS - MONITORING**
+- **Current**: Azure building with GitHub Actions environment fix
+- **Asset Hash**: Still `index-C2qqqWse.js` (old version)  
+- **Expected**: New hash when deployment completes
+- **ETA**: 2-5 minutes for Azure Static Web Apps build
+
+### ⏰ **WHAT TO WATCH FOR**
+1. **Asset Change**: New `index-XXXXX.js` filename
+2. **Console Log**: `🔧 API Configuration: { baseURL: '/api' }`  
+3. **No CORS Errors**: From old backend URL
+4. **Mock API Working**: Fallback data for music generation
+
 ### 🎯 **What Should Happen Now**
 - Frontend will use `/api/health` instead of external URL
 - Mock API fallback will work when `/api/` returns 404

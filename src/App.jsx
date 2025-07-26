@@ -14,7 +14,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // App initialization with mock API fallback - v1.1
+    // App initialization with robust API fallback - v1.2.0
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 2000)
