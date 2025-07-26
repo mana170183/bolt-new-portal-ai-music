@@ -1,13 +1,16 @@
 {
   "name": "ai-music-api",
-  "version": "1.0.0",
-  "description": "AI Music Generation API",
-  "main": "health.js",
+  "version": "2.0.0",
+  "description": "AI Music Generation API - Azure Functions v4",
+  "main": "index.js",
   "engines": {
-    "node": "18.x"
+    "node": "~18"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@azure/functions": "^4.0.0"
+  },
   "scripts": {
-    "start": "node health.js"
+    "start": "func start",
+    "test": "echo \"No tests yet\""
   }
 }

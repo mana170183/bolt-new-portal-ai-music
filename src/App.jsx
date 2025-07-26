@@ -15,7 +15,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // NUCLEAR DEPLOYMENT v2.0.0 - Complete API override - Build: 2024-12-08
+    // MEGA DEPLOYMENT v3.0.0 - Complete API rewrite - Build: 2024-12-08
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 2000)
