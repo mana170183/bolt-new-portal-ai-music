@@ -14,7 +14,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate app initialization
+    // App initialization with mock API fallback - v1.1
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 2000)
