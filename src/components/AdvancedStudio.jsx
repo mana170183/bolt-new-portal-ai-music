@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Play, 
   Pause, 
@@ -21,6 +21,7 @@ const AdvancedStudio = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedTrack, setGeneratedTrack] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const audioRef = useRef(null)
   const [settings, setSettings] = useState({
     duration: 60,
     tempo: 120,
@@ -56,12 +57,13 @@ const AdvancedStudio = () => {
   ]
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return
-
     setIsGenerating(true)
     try {
-      const response = await musicAPI.generateAdvanced({
-        prompt,
+      // Use a default prompt if none provided
+      const finalPrompt = prompt.trim() || `A ${settings.mood} ${settings.genre} track with ${settings.instruments.join(', ')}`;
+      
+      const response = await musicAPI.generateAdvancedMusic({
+        prompt: finalPrompt,
         ...settings
       })
       
@@ -92,6 +94,53 @@ const AdvancedStudio = () => {
         : [...prev.effects, effectId]
     }))
   }
+
+  const togglePlayback = async () => {
+    console.log('togglePlayback called in AdvancedStudio', { 
+      hasTrack: !!generatedTrack, 
+      hasAudioUrl: !!generatedTrack?.audioUrl, 
+      hasAudioRef: !!audioRef.current,
+      audioUrl: generatedTrack?.audioUrl 
+    });
+    
+    if (!generatedTrack?.audioUrl || !audioRef.current) {
+      console.warn('No audio URL or audio element available');
+      return;
+    }
+
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+        console.log('Audio paused in AdvancedStudio');
+      } else {
+        console.log('Attempting to play audio in AdvancedStudio...');
+        await audioRef.current.play();
+        setIsPlaying(true);
+        console.log('Audio playing in AdvancedStudio');
+      }
+    } catch (error) {
+      console.error('Audio playback error in AdvancedStudio:', error);
+      setIsPlaying(false);
+    }
+  }
+
+  // Handle audio events
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => setIsPlaying(false);
+    const handleError = () => setIsPlaying(false);
+
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, [generatedTrack]);
 
   return (
     <div className="bg-white rounded-lg shadow-xl p-8">
@@ -287,9 +336,9 @@ const AdvancedStudio = () => {
           {/* Generate Button */}
           <button
             onClick={handleGenerate}
-            disabled={isGenerating || !prompt.trim()}
+            disabled={isGenerating}
             className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-all ${
-              isGenerating || !prompt.trim()
+              isGenerating
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-purple-600 hover:bg-purple-700 transform hover:scale-105'
             }`}
@@ -315,14 +364,14 @@ const AdvancedStudio = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <button
-                    onClick={() => setIsPlaying(!isPlaying)}
+                    onClick={togglePlayback}
                     className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
                   >
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                     <span>{isPlaying ? 'Pause' : 'Play'}</span>
                   </button>
                   
-                  <button className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                  <button className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md">
                     <Download className="w-4 h-4" />
                     <span>Download</span>
                   </button>
@@ -340,6 +389,9 @@ const AdvancedStudio = () => {
           )}
         </div>
       </div>
+
+      {/* Audio Element (hidden) */}
+      <audio ref={audioRef} src={generatedTrack?.audioUrl} preload="auto" />
     </div>
   )
 }

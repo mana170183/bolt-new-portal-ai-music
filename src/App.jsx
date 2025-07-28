@@ -8,14 +8,13 @@ import MusicLibrary from './components/MusicLibrary'
 import Pricing from './components/Pricing'
 import Footer from './components/Footer'
 import LoadingScreen from './components/LoadingScreen'
-import './deployment-force.js' // NUCLEAR DEPLOYMENT v2.0.0 - Force rebuild
 
 function App() {
   const [activeTab, setActiveTab] = useState('simple')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // MEGA DEPLOYMENT v3.0.0 - Complete API rewrite - Build: 2024-12-08
+    // Complete API rewrite - Build: 2025-07-26
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 2000)
@@ -28,13 +27,13 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
       <Header />
       <Hero />
       <Features />
       
       {/* Music Generation Tabs */}
-      <div className="bg-gray-100 py-12" id="generator">
+      <div className="bg-blue-50 py-12" id="generator">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Tab Navigation */}
           <div className="flex justify-center mb-8">

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Portal - Demo Track Test</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .track {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+        .track:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .track-info {
+            flex: 1;
+        }
+        .track-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .track-genre {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+        .play-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+        }
+        .play-button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        .play-button.playing {
+            background: #ff6b6b;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .waveform {
+            width: 200px;
+            height: 40px;
+            display: flex;
+            align-items: end;
+            gap: 2px;
+            margin: 10px 0;
+        }
+        .waveform-bar {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 2px;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+        .track.playing .waveform-bar {
+            background: #4CAF50;
+            animation: wave 1s infinite ease-in-out;
+        }
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 AI Music Portal</h1>
+            <p>Demo Track Test - Listen to AI-Generated Music</p>
+        </div>
+        
+        <div id="status" class="status">
+            <div class="loading">Loading demo tracks...</div>
+        </div>
+        
+        <div id="tracks-container"></div>
+    </div>
+
+    <script>
+        let currentAudio = null;
+        let currentPlayingTrack = null;
+
+        async function loadDemoTracks() {
+            try {
+                const response = await fetch('http://localhost:5002/api/demo-tracks');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTracks(data.tracks.slice(0, 3));
+                    document.getElementById('status').innerHTML = 
+                        `<div style="color: #4CAF50;">✅ Successfully loaded ${data.tracks.length} demo tracks</div>`;
+                } else {
+                    throw new Error('Failed to load tracks');
+                }
+            } catch (error) {
+                console.error('Error loading tracks:', error);
+                document.getElementById('status').innerHTML = 
+                    `<div style="color: #ff6b6b;">❌ Failed to load demo tracks: ${error.message}</div>`;
+            }
+        }
+
+        function displayTracks(tracks) {
+            const container = document.getElementById('tracks-container');
+            container.innerHTML = '';
+
+            tracks.forEach(track => {
+                const trackElement = document.createElement('div');
+                trackElement.className = 'track';
+                trackElement.id = `track-${track.id}`;
+                
+                const waveform = track.waveform || [0.2, 0.8, 0.4, 0.9, 0.3, 0.7, 0.6, 0.5, 0.8, 0.2, 0.9, 0.4];
+                const waveformHTML = waveform.map(val => 
+                    `<div class="waveform-bar" style="height: ${val * 100}%"></div>`
+                ).join('');
+
+                trackElement.innerHTML = `
+                    <div class="track-info">
+                        <div class="track-title">${track.title}</div>
+                        <div class="track-genre">${track.genre} • ${track.duration || 'N/A'}s</div>
+                        <div class="waveform">${waveformHTML}</div>
+                    </div>
+                    <button class="play-button" onclick="playTrack('${track.id}', '${track.url}', '${track.title}')">
+                        ▶ Play
+                    </button>
+                `;
+                
+                container.appendChild(trackElement);
+            });
+        }
+
+        function playTrack(trackId, url, title) {
+            const button = document.querySelector(`#track-${trackId} .play-button`);
+            const trackElement = document.getElementById(`track-${trackId}`);
+            
+            // If same track is playing, stop it
+            if (currentPlayingTrack === trackId && currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+                currentAudio = null;
+                currentPlayingTrack = null;
+                button.textContent = '▶ Play';
+                button.classList.remove('playing');
+                trackElement.classList.remove('playing');
+                return;
+            }
+            
+            // Stop any currently playing audio
+            if (currentAudio) {
+                currentAudio.pause();
+                if (currentPlayingTrack) {
+                    const prevButton = document.querySelector(`#track-${currentPlayingTrack} .play-button`);
+                    const prevTrack = document.getElementById(`track-${currentPlayingTrack}`);
+                    if (prevButton) {
+                        prevButton.textContent = '▶ Play';
+                        prevButton.classList.remove('playing');
+                    }
+                    if (prevTrack) {
+                        prevTrack.classList.remove('playing');
+                    }
+                }
+            }
+            
+            // Create new audio instance
+            currentAudio = new Audio(url);
+            currentPlayingTrack = trackId;
+            
+            // Update UI to playing state
+            button.textContent = '⏸ Pause';
+            button.classList.add('playing');
+            trackElement.classList.add('playing');
+            
+            // Set up event listeners
+            currentAudio.onended = () => {
+                button.textContent = '▶ Play';
+                button.classList.remove('playing');
+                trackElement.classList.remove('playing');
+                currentPlayingTrack = null;
+                currentAudio = null;
+            };
+            
+            currentAudio.onerror = () => {
+                console.error('Audio playback failed for:', title);
+                button.textContent = '❌ Error';
+                button.classList.remove('playing');
+                trackElement.classList.remove('playing');
+                currentPlayingTrack = null;
+                currentAudio = null;
+                
+                // Show error in status
+                document.getElementById('status').innerHTML = 
+                    `<div style="color: #ff6b6b;">❌ Playback failed for "${title}". Check browser console for details.</div>`;
+            };
+            
+            currentAudio.onplay = () => {
+                document.getElementById('status').innerHTML = 
+                    `<div style="color: #4CAF50;">🎵 Now playing: "${title}"</div>`;
+            };
+            
+            // Start playback
+            currentAudio.play().catch(error => {
+                console.error('Play error:', error);
+                button.textContent = '❌ Error';
+                button.classList.remove('playing');
+                trackElement.classList.remove('playing');
+                currentPlayingTrack = null;
+                currentAudio = null;
+            });
+        }
+
+        // Load tracks when page loads
+        document.addEventListener('DOMContentLoaded', loadDemoTracks);
+    </script>
+</body>
+</html>

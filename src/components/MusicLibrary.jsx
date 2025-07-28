@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Play, 
   Pause, 
@@ -24,6 +24,7 @@ const MusicLibrary = () => {
   const [filterGenre, setFilterGenre] = useState('all')
   const [tracks, setTracks] = useState([])
   const [playingTrack, setPlayingTrack] = useState(null)
+  const audioRef = useRef(null)
 
   // Mock data for demonstration
   useEffect(() => {
@@ -37,7 +38,8 @@ const MusicLibrary = () => {
         plays: 245,
         liked: true,
         tags: ["cinematic", "epic", "adventure"],
-        waveform: "data:image/svg+xml,..."
+        waveform: "data:image/svg+xml,...",
+        audioUrl: "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3"
       },
       {
         id: 2,
@@ -48,7 +50,8 @@ const MusicLibrary = () => {
         plays: 189,
         liked: false,
         tags: ["synthwave", "retro", "80s"],
-        waveform: "data:image/svg+xml,..."
+        waveform: "data:image/svg+xml,...",
+        audioUrl: "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3"
       },
       {
         id: 3,
@@ -59,7 +62,8 @@ const MusicLibrary = () => {
         plays: 156,
         liked: true,
         tags: ["smooth", "cafe", "relaxing"],
-        waveform: "data:image/svg+xml,..."
+        waveform: "data:image/svg+xml,...",
+        audioUrl: "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3"
       },
       {
         id: 4,
@@ -70,7 +74,8 @@ const MusicLibrary = () => {
         plays: 312,
         liked: false,
         tags: ["energetic", "powerful", "guitar"],
-        waveform: "data:image/svg+xml,..."
+        waveform: "data:image/svg+xml,...",
+        audioUrl: "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3"
       },
       {
         id: 5,
@@ -81,7 +86,8 @@ const MusicLibrary = () => {
         plays: 89,
         liked: true,
         tags: ["peaceful", "meditation", "space"],
-        waveform: "data:image/svg+xml,..."
+        waveform: "data:image/svg+xml,...",
+        audioUrl: "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3"
       },
       {
         id: 6,
@@ -92,7 +98,8 @@ const MusicLibrary = () => {
         plays: 278,
         liked: false,
         tags: ["urban", "beat", "rap"],
-        waveform: "data:image/svg+xml,..."
+        waveform: "data:image/svg+xml,...",
+        audioUrl: "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3"
       }
     ]
     setTracks(mockTracks)
@@ -118,8 +125,28 @@ const MusicLibrary = () => {
       }
     })
 
-  const togglePlay = (trackId) => {
-    setPlayingTrack(playingTrack === trackId ? null : trackId)
+  const togglePlay = async (trackId) => {
+    const track = tracks.find(t => t.id === trackId);
+    if (!track?.audioUrl || !audioRef.current) {
+      console.warn('No audio URL or audio element available');
+      return;
+    }
+
+    try {
+      if (playingTrack === trackId) {
+        // Currently playing this track, pause it
+        audioRef.current.pause();
+        setPlayingTrack(null);
+      } else {
+        // Play this track
+        audioRef.current.src = track.audioUrl;
+        await audioRef.current.play();
+        setPlayingTrack(trackId);
+      }
+    } catch (error) {
+      console.error('Audio playback error:', error);
+      setPlayingTrack(null);
+    }
   }
 
   const toggleLike = (trackId) => {
@@ -363,6 +390,13 @@ const MusicLibrary = () => {
           <p className="text-gray-600">Try adjusting your search or filters</p>
         </div>
       )}
+
+      {/* Hidden audio element for playback */}
+      <audio 
+        ref={audioRef} 
+        onEnded={() => setPlayingTrack(null)}
+        onError={() => setPlayingTrack(null)}
+      />
     </div>
   )
 }

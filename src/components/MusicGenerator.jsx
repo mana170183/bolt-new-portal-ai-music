@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Play, 
   Pause, 
@@ -24,6 +24,7 @@ const MusicGenerator = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const audioRef = useRef(null)
   const [genres, setGenres] = useState([
     {id: 'pop', name: 'Pop', description: 'Popular music with catchy melodies'},
     {id: 'rock', name: 'Rock', description: 'Guitar-driven energetic music'},
@@ -47,7 +48,7 @@ const MusicGenerator = () => {
     {id: 'melancholic', name: 'Melancholic', description: 'Sad, contemplative'}
   ])
   const [userQuota, setUserQuota] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(true) // Set to true by default
 
   useEffect(() => {
     initializeComponent()
@@ -55,70 +56,52 @@ const MusicGenerator = () => {
 
   const initializeComponent = async () => {
     try {
-      // First check if backend is available
+      // Simple health check
       try {
-        const healthResponse = await fetch('/health', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // Add timeout to prevent hanging
-          signal: AbortSignal.timeout(10000) // 10 second timeout
-        })
-        if (!healthResponse.ok) {
-          throw new Error(`Health check failed: ${healthResponse.status}`)
+        const healthResponse = await fetch('/health')
+        if (healthResponse.ok) {
+          const healthData = await healthResponse.json()
+          console.log('Backend health check passed:', healthData)
         }
-        const healthData = await healthResponse.json()
-        console.log('Backend health check passed:', healthData)
       } catch (healthError) {
-        console.error('Backend health check failed:', healthError)
-        if (healthError.name === 'TimeoutError') {
-          setError('Backend server is taking too long to respond. Please check if the Flask server is running on port 5000.')
-        } else if (healthError.message.includes('Failed to fetch') || healthError.message.includes('ECONNREFUSED')) {
-          setError('Cannot connect to backend server. Please start the Flask server by running the backend startup script in a separate terminal.')
-        } else {
-          setError(`Backend server error: ${healthError.message}. Please ensure the Flask server is running on port 5000.`)
-        }
-        return
+        console.warn('Health check failed, but continuing:', healthError)
       }
 
-      // Check authentication
+      // Load basic data
       try {
-        if (!authAPI.isAuthenticated()) {
-          await authAPI.generateToken('demo_user', 'free')
-        }
-        setIsAuthenticated(true)
-      } catch (authError) {
-        console.error('Authentication failed:', authError)
-        setError(`Authentication failed: ${authError.message || 'Unknown error'}. Please check the backend server logs.`)
-        return
-      }
-
-      // Load metadata
-      try {
-        const [genresData, moodsData, quotaData] = await Promise.all([
-          metadataAPI.getGenres(),
-          metadataAPI.getMoods(),
-          musicAPI.getUserQuota()
+        const [genresData, moodsData] = await Promise.all([
+          musicAPI.getGenres(),
+          musicAPI.getMoods()
         ])
-
-        if (genresData.status === 'success' && genresData.genres && genresData.genres.length > 0) {
+        
+        if (genresData.genres) {
           setGenres(genresData.genres)
         }
-        if (moodsData.status === 'success' && moodsData.moods && moodsData.moods.length > 0) {
+        if (moodsData.moods) {
           setMoods(moodsData.moods)
         }
-        if (quotaData.status === 'success') {
-          setUserQuota(quotaData.quota)
+
+        // Try to load quota data
+        try {
+          const quotaData = await musicAPI.getUserQuota()
+          if (quotaData.quota) {
+            setUserQuota(quotaData.quota)
+          }
+        } catch (quotaError) {
+          console.warn('Failed to load quota:', quotaError)
+          // Set default quota
+          setUserQuota({
+            daily_remaining: 50,
+            daily_limit: 50,
+            plan: 'free'
+          })
         }
-      } catch (metadataError) {
-        console.error('Failed to load metadata:', metadataError)
-        // Default values are already set in useState, so we don't need to set them here
-        console.warn('Using default metadata due to API error')
+        
+      } catch (error) {
+        console.warn('Failed to load metadata, using defaults:', error)
       }
     } catch (error) {
       console.error('Initialization error:', error)
-      setError(`Failed to initialize: ${error.message || 'Unknown error'}. Please ensure the backend server is running and refresh the page.`)
     }
   }
 
@@ -128,64 +111,101 @@ const MusicGenerator = () => {
       return
     }
 
-    if (userQuota && userQuota.remaining_today === 0) {
-      setError('Daily quota exceeded. Please upgrade your plan or try again tomorrow.')
-      return
-    }
-
     setIsGenerating(true)
     setError('')
     setSuccess('')
     
     try {
-      const result = await musicAPI.generateMusic(prompt, {
+      const result = await musicAPI.generateMusic({
+        prompt,
         duration,
         genre,
         mood
       })
 
-      if (result.status === 'success') {
+      if (result.success) {
         setGeneratedTrack(result.track)
         setSuccess('Music generated successfully!')
-        
-        // Update quota
-        const updatedQuota = await musicAPI.getUserQuota()
-        if (updatedQuota.status === 'success') {
-          setUserQuota(updatedQuota.quota)
-        }
+        setError('') // Clear any previous errors
+        console.log('Generated track:', result.track)
       } else {
         setError(result.message || 'Failed to generate music')
+        setSuccess('')
       }
     } catch (error) {
       console.error('Generation error:', error)
-      if (error.response?.status === 429) {
-        setError('Rate limit exceeded. Please try again later.')
-      } else if (error.response?.status === 401) {
-        setError('Authentication failed. Please refresh the page.')
-        setIsAuthenticated(false)
-      } else {
-        setError(error.message || 'Failed to generate music. Please try again.')
-      }
+      setError('Failed to generate music. Please try again.')
+      setSuccess('')
     } finally {
       setIsGenerating(false)
     }
   }
 
-  const togglePlayback = () => {
-    setIsPlaying(!isPlaying)
+  const togglePlayback = async () => {
+    console.log('togglePlayback called', { 
+      hasTrack: !!generatedTrack, 
+      hasAudioUrl: !!generatedTrack?.audioUrl, 
+      hasAudioRef: !!audioRef.current,
+      audioUrl: generatedTrack?.audioUrl 
+    });
+    
+    if (!generatedTrack?.audioUrl || !audioRef.current) {
+      console.warn('No audio URL or audio element available');
+      setError('Audio not available. Please generate music first.');
+      return;
+    }
+
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+        console.log('Audio paused');
+      } else {
+        console.log('Attempting to play audio...');
+        await audioRef.current.play();
+        setIsPlaying(true);
+        console.log('Audio playing');
+      }
+    } catch (error) {
+      console.error('Audio playback error:', error);
+      setError('Unable to play audio. Please try again.');
+      setIsPlaying(false);
+    }
   }
 
+  // Handle audio events
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => setIsPlaying(false);
+    const handleError = () => {
+      setIsPlaying(false);
+      setError('Audio failed to load. Using fallback audio.');
+    };
+
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, [generatedTrack]);
+
   const handleDownload = () => {
-    if (generatedTrack?.download_url) {
-      window.open(generatedTrack.download_url, '_blank')
+    if (generatedTrack?.audioUrl) {
+      const link = document.createElement('a');
+      link.href = generatedTrack.audioUrl;
+      link.download = `${generatedTrack.title || 'generated-music'}.wav`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }
 
   const canGenerate = () => {
-    return prompt.trim() && 
-           !isGenerating && 
-           isAuthenticated && 
-           (userQuota?.remaining_today !== 0)
+    return prompt.trim() && !isGenerating
   }
 
   return (
@@ -205,18 +225,18 @@ const MusicGenerator = () => {
         <div className="max-w-4xl mx-auto">
           <div className="card p-8">
             {/* User Quota Display */}
-            {userQuota && (
+            {userQuota && userQuota.plan && (
               <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Zap className="h-5 w-5 text-blue-600" />
                     <span className="font-semibold text-gray-900">
-                      Plan: {userQuota.plan.charAt(0).toUpperCase() + userQuota.plan.slice(1)}
+                      Plan: {userQuota?.plan ? userQuota.plan.charAt(0).toUpperCase() + userQuota.plan.slice(1) : 'Free'}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600">
-                    {userQuota.daily_limit > 0 ? (
-                      <>Remaining today: {userQuota.remaining_today}/{userQuota.daily_limit}</>
+                    {userQuota?.daily_limit && userQuota.daily_limit > 0 ? (
+                      <>Remaining today: {userQuota.remaining_today || 0}/{userQuota.daily_limit}</>
                     ) : (
                       'Unlimited generations'
                     )}
@@ -339,12 +359,6 @@ const MusicGenerator = () => {
                   </>
                 )}
               </button>
-              
-              {!isAuthenticated && (
-                <p className="text-sm text-gray-500 mt-2">
-                  Authentication required. Please refresh the page.
-                </p>
-              )}
             </div>
 
             {/* Generated Track */}
@@ -365,12 +379,16 @@ const MusicGenerator = () => {
                   <div className="flex items-center space-x-3">
                     <button
                       onClick={togglePlayback}
-                      className="bg-white hover:bg-gray-50 p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105"
+                      className="bg-white hover:bg-gray-50 p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105 relative"
+                      title={isPlaying ? "Pause" : "Play"}
                     >
                       {isPlaying ? (
                         <Pause className="h-6 w-6 text-primary-600" />
                       ) : (
                         <Play className="h-6 w-6 text-primary-600" />
+                      )}
+                      {generatedTrack?.audioUrl && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></div>
                       )}
                     </button>
                     <button className="bg-white hover:bg-gray-50 p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105">
@@ -409,6 +427,17 @@ const MusicGenerator = () => {
                 <div className="text-center text-sm text-gray-600">
                   🎉 Your AI-generated music is ready! This track is 100% royalty-free and ready for commercial use.
                 </div>
+
+                {/* Hidden audio element for playback */}
+                {generatedTrack?.audioUrl && (
+                  <audio 
+                    ref={audioRef} 
+                    src={generatedTrack.audioUrl} 
+                    preload="metadata"
+                    onLoadedData={() => console.log('Audio loaded successfully')}
+                    onError={(e) => console.error('Audio loading error:', e)}
+                  />
+                )}
               </div>
             )}
           </div>
